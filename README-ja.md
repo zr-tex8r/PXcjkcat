@@ -1,0 +1,39 @@
+PXcjkcat パッケージバンドル
+===========================
+
+LaTeX： upTeX の和文文字カテゴリを扱う LaTeX 上のインタフェース
+
+upTeX の和文文字カテゴリ（kcatcode）を扱う LaTeX 上のインタフェースを
+提供する。
+
+### 前提環境
+
+  * フォーマット： LaTeX
+  * エンジン： upTeX、pTeX-ng
+  * DVIウェア： 不問
+
+### インストール
+
+  - `*.sty` → $TEXMF/tex/platex/PXcjkcat
+
+### ライセンス
+
+本パッケージは MIT ライセンスの下で配布される。
+
+
+pxcjkcat パッケージ ー 本体
+---------------------------
+
+詳細についてはマニュアル `pxcjkcat.pdf` を参照されたい。
+
+
+更新履歴
+--------
+
+  * Version 1.0 〈2012/09/22〉
+      - PXbase バンドル中の pxcjkcat パッケージを分離して本バンドルを作成。
+      - pxcjkcat の中身は PXbase 0.5 版収録の「0.4a 版」と同一。
+
+--------------------
+Takayuki YATO (aka. "ZR")  
+https://github.com/zr-tex8r

@@ -1,13 +1,43 @@
-==================================================
-== PXcjkcat バンドル v1.0  <2012/09/22>         ==
-==          八登 崇之（Takayuki YATO；aka."ZR"）==
-==                      <zrbabbler@yahoo.co.jp> ==
-==================================================
-(This file is encoded in UTF-8,)
+% upLaTeX 文書; 文字コードは UTF-8
+\documentclass[uplatex,dvipdfmx,a4paper]{jsarticle}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage[colorlinks,hyperfootnotes=false]{hyperref}
+\hypersetup{linkcolor=blue!75!black,urlcolor=green!45!black}
+\usepackage{shortvrb}
+\MakeShortVerb{\|}
+\usepackage{verbatim}
+\newenvironment{myverbatim}
+  {\begin{quote}\small\verbatim}
+  {\endverbatim\end{quote}}
+\newcommand{\PkgVersion}{1.1-pre}
+\newcommand{\PkgDate}{2012/09/22}
+\newcommand{\Pkg}[1]{\textsf{#1}}
+\newcommand{\Meta}[1]{$\langle$\mbox{}#1\mbox{}$\rangle$}
+\newcommand{\Note}{\par\noindent ※}
+\newcommand{\Means}{：\quad}
+\newcommand{\jemph}{\textsf}
+\newcommand{\wbr}{\linebreak[0]}
+\providecommand{\pTeX}{p\TeX}
+\providecommand{\upTeX}{u\pTeX}
+\providecommand{\pLaTeX}{p\LaTeX}
+\providecommand{\upLaTeX}{u\pLaTeX}
+%-----------------------------------------------------------
+\begin{document}
+\title{\Pkg{pxchfon} パッケージ}
+\author{八登崇之\ （Takayuki YATO; aka.~``ZR''）}
+\date{v\PkgVersion\quad[\PkgDate]}
+\maketitle
 
-upTeX の和文文字カテゴリ（kcatcode）を扱う LaTeX 上のインタフェースを
-提供する。
+\begin{abstract}
+本パッケージは、
+{\upTeX}の和文文字カテゴリ（kcatcode）を扱う{\LaTeX}上の
+インタフェースを提供する。
+\end{abstract}
 
+%===========================================================
+\small
+\begin{verbatim}
 ■ 本ソフトウェアの作者のサイト
 
     En toi Pythmeni tes TeXnopoleos ～電脳世界の奥底にて～
@@ -519,11 +549,5 @@ upTeX の和文文字カテゴリ（kcatcode）を扱う LaTeX 上のインタ�
     設定値は cjk12 のものに従う。
 
 ----------------------------------------
-
-■ 更新履歴
-
-Version 1.0  <2012/09/22>
-  PXbase バンドル中の pxcjkcat パッケージを分離して本バンドルを作成。
-  pxcjkcat の中身は PXbase 0.5 版収録の「0.4a 版」と同一。
-
-# EOF
+\end{verbatim}
+\end{document}
