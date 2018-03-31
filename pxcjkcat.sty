@@ -17,6 +17,10 @@
   {Invalid name (#1) for Unicode block}\@eha}
 \def\pxkc@err@ivmsy#1{\pxkc@error
   {Invalid name (#1) for cjk-category mode}\@eha}
+\def\pxkc@warn@dfblk#1{%
+  \PackageWarning\pxkc@pkgname
+   {Defunct Unicode block '#1' is\MessageBreak
+    specified}}
 \ifx\bxUseDebug\@undefined
 \let\pxkc@debug\@gobble
 \else
@@ -33,8 +37,24 @@
     {Package loading is aborted.}
 \expandafter\endinput\fi\relax
 
-%%%% prepraration
+%--------------------------------------- general
+
+%% variables
 \newif\ifpxkc@ok
+\newif\ifpxkc@warn@defunct \pxkc@warn@defuncttrue
+\let\pxkc@arg\relax
+\let\pxkc@blk\relax
+\let\pxkc@grp\relax
+\let\pxkc@cc\relax
+
+%% \pxkc@letcs\CSa{<csname-b>}
+\def\pxkc@letcs#1#2{%
+  \expandafter\let\expandafter#1\csname#2\endcsname}
+%% \pxkc@expanded{<text>}
+\def\pxkc@expanded#1{%
+  \edef\pxkc@nxt{#1}\pxkc@nxt}
+
+%---------------------------------------
 
 %%%% option handler
 \chardef\pxkc@mccv=1
@@ -93,8 +113,17 @@
 %%%% table
 \def\pxkc@bval#1#2#3#4{% #4 is unused for now
   \ifnum#1>\pxkc@ccv\else
-    \edef\pxkc@bslst{\pxkc@bslst\pxkc@sep#2}%
-    \@namedef{pxkc@B@@#2}{#3}\def\pxkc@sep{,}%
+    \ifnum#1<\tw@ \pxkc@okfalse
+    \else
+      \@tempcnta=#3\relax \@tempcntb\@tempcnta \advance\@tempcntb\m@ne
+      \pxkc@issameblock\@tempcnta\@tempcntb
+    \fi
+    \ifpxkc@ok \pxkc@debug{defunct: #2}%
+      \@namedef{pxkc@B@@#2}{-1}% invalid
+    \else
+      \@namedef{pxkc@B@@#2}{#3}%
+      \edef\pxkc@bslst{\pxkc@bslst\pxkc@sep#2}\def\pxkc@sep{,}%
+    \fi
   \fi}
 \def\pxkc@bslst{}\def\pxkc@sep{}
 \def\pxkc@cval#1#2{\@namedef{pxkc@C@@#1}{#2}}
@@ -393,18 +422,20 @@
 %=======================================
 \ifnum\pxkc@ccv<2 \else
 \pxkc@gval{cjk12}{cjk1a,cjk1b,cjk1c}{Halfwidth and Fullwidth Forms}
-\pxkc@bval{2}{cjk1a}{"FF01}{Halfwidth and Fullwidth Forms/Other}
-\pxkc@bval{2}{cjk1b}{"FF10}{Halfwidth and Fullwidth Forms/Latin}
-\pxkc@bval{2}{cjk1c}{"FF66}{Halfwidth and Fullwidth Forms/Kana}
+\pxkc@bval{0}{cjk1a}{"FF01}{Halfwidth and Fullwidth Forms/Other}
+\pxkc@bval{0}{cjk1b}{"FF10}{Halfwidth and Fullwidth Forms/Latin}
+\pxkc@bval{0}{cjk1c}{"FF66}{Halfwidth and Fullwidth Forms/Kana}
 \fi
 \ifnum\pxkc@ccv<3 \else
 \pxkc@gval{latn1}{latnx,latny}{Latin-1 Supplement}
-\pxkc@bval{3}{latnx}{"00A0}{Latin-1 Supplement/Other}
-\pxkc@bval{3}{latny}{"00C0}{Latin-1 Supplement/Latin}
+\pxkc@bval{0}{latnx}{"00A0}{Latin-1 Supplement/Other}
+\pxkc@bval{0}{latny}{"00C0}{Latin-1 Supplement/Latin}
 \fi
   %
 \edef\pxkc@foreachblk{\noexpand\@for\noexpand\x:={\pxkc@bslst}}
 \let\pxkc@bval\relax\let\pxkc@cval\relax\let\pxkc@bslst\relax
+
+%--------------------------------------- public interfaces
 
 %%<*> \cjkcategory{<block>}{<category>}
 % Sets the kcatcode of block <block> to <category>.
@@ -429,13 +460,36 @@
 \def\pxkc@cjkcategory@b#1{%
   \pxkc@chkchr{#1}\ifnum\pxkc@cc>\pxkc@la
     \pxkc@kcatcode{\pxkc@cc}{\pxkc@arg}%
-  \else\expandafter\ifx\csname pxkc@G@@#1\endcsname\relax
-    \expandafter\ifx\csname pxkc@B@@#1\endcsname\relax
+  \else
+    \pxkc@cjkcategory@c{#1}%
+  \fi}
+\def\pxkc@cjkcategory@c#1{%
+  \pxkc@letcs\pxkc@grp{pxkc@G@@#1}%
+  \ifx\pxkc@grp\relax
+    \pxkc@letcs\pxkc@blk{pxkc@B@@#1}%
+    \ifx\pxkc@blk\relax
       \pxkc@err@ivbsy{#1}%
-    \else \pxkc@kcatcode{\@nameuse{pxkc@B@@#1}}{\pxkc@arg}\fi
-  \else \edef\pxkc@nxt{\noexpand\pxkc@cjkcategory@a
-         {\@nameuse{pxkc@G@@#1}}}\pxkc@nxt
+    \else\ifnum\pxkc@blk<\z@
+      \ifpxkc@warn@defunct \pxkc@warn@dfblk{#1}\fi
+    \else
+      \pxkc@kcatcode{\pxkc@blk}{\pxkc@arg}%
+    \fi\fi
+  \else
+    \pxkc@expanded{\noexpand\pxkc@cjkcategory@a{\pxkc@grp}}%
+  \fi}
+
+%%<*> \pxkc@cjkcategory{<block>}{<kcatcode>}
+%%<*> \pxkc@cjkcategory@mccv{<mccv>}{<block>}{<kcatcode>}
+% Another entry point for internal use.
+\def\pxkc@cjkcategory#1#2{%
+  \edef\pxkc@arg{#2}%
+  \pxkc@cjkcategory@c{#1}}
+\def\pxkc@cjkcategory@mccv#1#2#3#4{%
+  \ifnum#1>\pxkc@mccv\else \ifnum#2<\pxkc@mccv\else
+    \pxkc@cjkcategory{#3}{#4}%
   \fi\fi}
+
+%% \pxkc@chkchr{<arg>}
 \def\pxkc@chkchr#1{%
   \afterassignment\pxkc@chkchr@a\chardef\pxkc@cc=`#1?\relax}
 \def\pxkc@chkchr@a#1\relax{}
@@ -443,64 +497,152 @@
 %%<*> \cjkcategorymode{<mode>}
 % Invokes the cjk-category mode <mode>.
 \def\cjkcategorymode#1{%
-  \@ifundefined{pxkc@M@@#1}{\pxkc@err@ivmsy}
-   {\@nameuse{pxkc@M@@#1}}}
+  \pxkc@letcs\pxkc@nxt{pxkc@M@@#1}%
+  \ifx\pxkc@nxt\relax
+    \pxkc@err@ivmsy
+  \else
+    \pxkc@warn@defunctfalse
+    \pxkc@nxt
+    \pxkc@warn@defuncttrue
+  \fi}
+
+%--------------------------------------- CJK category modes
+
+%% Invariant blocks
+\def\do#1#2{\expandafter\chardef\csname pxkc@K@@#1\endcsname=#2 }
+%=======================================
+\do{latn}  {15} % Basic Latin
+\do{hang1} {19} % Hangul Jamo
+\do{sym15} {18} % Enclosed Alphanumerics
+\do{cjk01} {16} % CJK Radicals Supplement
+\do{cjk02} {16} % Kangxi Radicals
+\do{cjk03} {16} % Ideographic Description Characters
+\do{cjk04} {18} % CJK Symbols and Punctuation
+\do{hira}  {17} % Hiragana
+\do{kana}  {17} % Katakana
+\do{bopo}  {16} % Bopomofo
+\do{hang2} {19} % Hangul Compatibility Jamo
+\do{cjk05} {16} % Kanbun
+\do{bopo1} {16} % Bopomofo Extended
+\do{cjk06} {16} % CJK Strokes
+\do{kana1} {17} % Katakana Phonetic Extensions
+\do{cjk07} {18} % Enclosed CJK Letters and Months
+\do{cjk08} {18} % CJK Compatibility
+\do{haniA} {16} % CJK Unified Ideographs Extension A
+\do{hani}  {16} % CJK Unified Ideographs
+\do{yiii}  {18} % Yi Syllables
+\do{yiii1} {18} % Yi Radicals
+\do{hangA} {19} % Hangul Jamo Extended-A
+\do{hang}  {19} % Hangul Syllables
+\do{hangB} {19} % Hangul Jamo Extended-B
+\do{hani1} {16} % CJK Compatibility Ideographs
+\do{cjk09} {18} % Vertical Forms
+\do{cjk10} {18} % CJK Compatibility Forms
+\do{cjk11} {18} % Small Form Variants
+\do{cjk12} {18} % Halfwidth and Fullwidth Forms
+\do{cjk1a} {18} % Halfwidth and Fullwidth Forms/Other
+\do{cjk1b} {17} % Halfwidth and Fullwidth Forms/Latin
+\do{cjk1c} {17} % Halfwidth and Fullwidth Forms/Kana
+\do{cjk14} {18} % Ideographic Symbols and Punctuation
+\do{tang}  {18} % Tangut
+\do{tang1} {18} % Tangut Components
+\do{kana2} {17} % Kana Supplement
+\do{kanaA} {17} % Kana Extended-A
+\do{nshu}  {18} % Nushu
+\do{sym45} {18} % Enclosed Alphanumeric Supplement
+\do{cjk13} {18} % Enclosed Ideographic Supplement
+\do{haniB} {16} % CJK Unified Ideographs Extension B
+\do{haniC} {16} % CJK Unified Ideographs Extension C
+\do{haniD} {16} % CJK Unified Ideographs Extension D
+\do{haniE} {16} % CJK Unified Ideographs Extension E
+\do{haniF} {16} % CJK Unified Ideographs Extension F
+\do{hani2} {16} % CJK Compatibility Ideographs Supplement
+%=======================================
 
 %%%% cjkcategory modes
-\def\pxkc@resetcjkcat{%
-  \pxkc@foreachblk\do{\pxkc@kcatcode{\@nameuse{pxkc@B@@\x}}{18}}}
-\def\pxkc@M@@forcecjk{\pxkc@resetcjkcat
-  \cjkcategory{latn}{noncjk}%
-  \cjkcategory{bopo,bopo1,cjk01,cjk02,cjk03,cjk05,cjk06,hani,hani1}{kanji}%
-  \cjkcategory{hani2,haniA,haniB}{kanji}%
-  \cjkcategory{hira,kana,kana1}{kana}%
-  \cjkcategory{hang,hang1,hang2}{hangul}%
-  \ifnum\pxkc@mccv<2\else
-    \cjkcategory{cjk1b,cjk1c}{kana}%
-  \fi
-  \ifnum\pxkc@ccv<2\else
-    \cjkcategory{haniC}{kanji}%
-    \cjkcategory{hangA,hangB}{hangul}%
-  \fi
+\def\pxkc@resetcjkcat#1{%
+  \chardef\pxkc@base@cat=#1\relax
+  \pxkc@foreachblk\do{%
+    \pxkc@letcs\pxkc@cat{pxkc@K@@\x}%
+    \ifx\pxkc@cat\relax \let\pxkc@cat\pxkc@base@cat \fi
+    \pxkc@kcatcode{\@nameuse{pxkc@B@@\x}}{\pxkc@cat}}%
+  \ifnum\pxkc@mccv<2
+    \pxkc@cjkcategory{cjk12}{18}%
+  \fi}
+
+%=======================================
+%% 'forcecjk'
+\def\pxkc@M@@forcecjk{%
+  \pxkc@resetcjkcat{18}%
 }
-\def\pxkc@M@@prefercjk{\pxkc@M@@forcecjk
-  \@for\x:={%
-    cyrl1,armn,hebr,arab,syrc,arab1,thaa,nkoo,deva,beng,%
-    guru,gujr,orya,taml,telu,knda,mlym,sinh,thai,laoo,%
-    tibt,mymr,geor,ethi,ethi1,cher,cans,ogam,runr,tglg,%
-    hano,buhd,tagb,khmr,mong,limb,tale,talu,khmr1,bugi,%
-    bali,latn4,latn5,sym03,sym14,sym21,sym22,brai,sym25,glag,%
-    latnC,copt,geor1,tfng,ethi2,sym27,sym28,sym29,latnD,sylo,%
-    phag,spc01,spc02,spc03,arab2,spc05,sym30,arab3,spc06,linb,%
-    linb1,sym31,grek2,ital,goth,ugar,xpeo,dsrt,shaw,osma,%
-    cprt,phnx,khar,xsux,xsux1,sym32,sym33,sym34,sym35,sym36,%
-    sym37,spc07,spc08,spc09,spc10%
-  }\do{\pxkc@kcatcode{\@nameuse{pxkc@B@@\x}}{15}}%
-  \ifnum\pxkc@ccv<2\else
-    \cjkcategory{samr,cans1,lana,sund,lepc,olck,sym38,cyrlA}{noncjk}%
-    \cjkcategory{lisu,vaii,cyrlB,bamu,sym39,saur,deva1,kali}{noncjk}%
-    \cjkcategory{rjng,java,cham,mymrA,tavt,mtei,sym40,sym41}{noncjk}%
-    \cjkcategory{lyci,cari,armi,lydi,sarb,avst,prti,phli}{noncjk}%
-    \cjkcategory{orkh,sym42,kthi,egyp,sym43,sym44,sym45}{noncjk}%
-  \fi
+%% 'prefercjk'
+\def\pxkc@M@@prefercjk{%
+  \pxkc@M@@prefercjkvar
+  \pxkc@cjkcategory{grek}{18}%
+  \pxkc@cjkcategory{cyrl}{18}%
+  \pxkc@cjkcategory{grek1}{18}%
 }
-\@namedef{pxkc@M@@prefercjkvar}{\pxkc@M@@prefercjk
-  \cjkcategory{cyrl,grek,grek1}{noncjk}%
+%% 'prefercjkvar'
+\def\pxkc@M@@prefercjkvar{%
+  \pxkc@M@@japanesevar
+  \pxkc@cjkcategory@mccv{3}{3}{latny}{18}%
+  \pxkc@cjkcategory{latnA}{18}%
+  \pxkc@cjkcategory{latnB}{18}%
+  \pxkc@cjkcategory{latn2}{18}%
+  \pxkc@cjkcategory{sym01}{18}%
+  \pxkc@cjkcategory{sym02}{18}%
+  \pxkc@cjkcategory{latn3}{18}%
+  \pxkc@cjkcategory{sym05}{18}%
+  \pxkc@cjkcategory{sym06}{18}%
+  \pxkc@cjkcategory{latn6}{18}%
 }
-\def\pxkc@M@@prefernoncjk{\pxkc@M@@prefercjkvar
-  \cjkcategory{latn1,latn2,latn3,latn6,latnA,latnB,spc04,sym01}{noncjk}%
-  \cjkcategory{sym02,sym04,sym05,sym06,sym07,sym08,sym09,sym10}{noncjk}%
-  \cjkcategory{sym11,sym12,sym13,sym16,sym17,sym18,sym19,sym20}{noncjk}%
-  \cjkcategory{sym23,sym24,sym26}{noncjk}%
+%% 'japanese'
+\def\pxkc@M@@japanese{%
+  \pxkc@M@@japanesevar
+  \pxkc@cjkcategory{grek}{18}%
+  \pxkc@cjkcategory{cyrl}{18}%
 }
-\def\pxkc@M@@prefernoncjkvar{\pxkc@M@@prefernoncjk
-  \cjkcategory{sym04,sym10,sym18}{other}%
+%% 'japanesevar'
+\def\pxkc@M@@japanesevar{%
+  \pxkc@M@@prefernoncjk
+  \pxkc@cjkcategory@mccv{1}{2}{latn1}{18}%
+  \pxkc@cjkcategory@mccv{3}{3}{latnx}{18}%
+  \pxkc@cjkcategory{sym04}{18}%
+  \pxkc@cjkcategory{sym07}{18}%
+  \pxkc@cjkcategory{sym08}{18}%
+  \pxkc@cjkcategory{sym09}{18}%
+  \pxkc@cjkcategory{sym10}{18}%
+  \pxkc@cjkcategory{sym11}{18}%
+  \pxkc@cjkcategory{sym12}{18}%
+  \pxkc@cjkcategory{sym13}{18}%
+  \pxkc@cjkcategory{sym16}{18}%
+  \pxkc@cjkcategory{sym17}{18}%
+  \pxkc@cjkcategory{sym18}{18}%
+  \pxkc@cjkcategory{sym19}{18}%
+  \pxkc@cjkcategory{sym20}{18}%
+  \pxkc@cjkcategory{sym23}{18}%
+  \pxkc@cjkcategory{sym24}{18}%
+  \pxkc@cjkcategory{sym26}{18}%
+  \pxkc@cjkcategory{spc04}{18}%
+}
+%% 'prefernoncjk'
+\def\pxkc@M@@prefernoncjk{%
+  \pxkc@resetcjkcat{15}%
+}
+%=======================================
+%% 'default'
+\def\pxkc@M@@default{%
+  \pxkc@M@@forcecjk
+  \pxkc@cjkcategory@mccv{3}{3}{latny}{15}%
+  \pxkc@cjkcategory@mccv{3}{3}{latnA}{15}%
 }
 
 %%%% \showcjkcategory
 \def\showcjkcategory{%
   \pxkc@foreachblk\do{%
-   \typeout{\x\space= \the\kcatcode\@nameuse{pxkc@B@@\x}}}}
+    \expandafter\ifx\csname pxkc@G@@\x\endcsname\relax
+      \typeout{\x\space= \the\kcatcode\@nameuse{pxkc@B@@\x}}%
+    \fi}}
 
 %%-------- \withcjktokendisabled, etc.
 
