@@ -41,6 +41,7 @@
 \DeclareOption{ccv1}{\chardef\pxkc@mccv=1 }
 \DeclareOption{ccv2}{\chardef\pxkc@mccv=2 }
 \DeclareOption{ccv3}{\chardef\pxkc@mccv=3 }
+\DeclareOption{ccv+}{\chardef\pxkc@mccv=0 }
 \let\pxkc@ccmode\relax
 \DeclareOption*{\edef\pxkc@ccmode{\CurrentOption}}
 \ProcessOptions\relax
@@ -63,6 +64,7 @@
 \ifx\bxDebugCcv\@undefined\else
   \chardef\pxkc@ccv=\bxDebugCcv\relax
 \fi
+\ifnum\pxkc@mccv=\z@ \let\pxkc@mccv\pxkc@ccv \fi
 \pxkc@debug{CJK category version \number\pxkc@ccv}
 %
 \ifnum\pxkc@mccv>\pxkc@ccv
