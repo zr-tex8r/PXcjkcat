@@ -1,30 +1,34 @@
 % upLaTeX 文書; 文字コードは UTF-8
 \documentclass[uplatex,dvipdfmx,a4paper]{jsarticle}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
 \usepackage{geometry}
 \usepackage{xcolor}
 \usepackage[colorlinks,hyperfootnotes=false]{hyperref}
+\usepackage{pxjahyper}
 \hypersetup{linkcolor=blue!75!black,urlcolor=green!45!black}
 \usepackage{shortvrb}
 \MakeShortVerb{\|}
 \usepackage{verbatim}
 \newenvironment{myverbatim}
-  {\begin{quote}\small\verbatim}
-  {\endverbatim\end{quote}}
-\newcommand{\PkgVersion}{1.1-pre}
-\newcommand{\PkgDate}{2012/09/22}
+  {\quote\small\verbatim}
+  {\endverbatim\endquote}
+\newcommand{\PkgVersion}{1.1}
+\newcommand{\PkgDate}{2018/04/01}
 \newcommand{\Pkg}[1]{\textsf{#1}}
 \newcommand{\Meta}[1]{$\langle$\mbox{}#1\mbox{}$\rangle$}
 \newcommand{\Note}{\par\noindent ※}
 \newcommand{\Means}{：\quad}
-\newcommand{\jemph}{\textsf}
+\newcommand{\strong}{\textsf}
 \newcommand{\wbr}{\linebreak[0]}
+\newcommand{\Code}[1]{{\usefont{T1}{lmtt}{l}{n}#1}}
 \providecommand{\pTeX}{p\TeX}
 \providecommand{\upTeX}{u\pTeX}
 \providecommand{\pLaTeX}{p\LaTeX}
 \providecommand{\upLaTeX}{u\pLaTeX}
 %-----------------------------------------------------------
 \begin{document}
-\title{\Pkg{pxchfon} パッケージ}
+\title{\Pkg{pxcjkcat} パッケージ}
 \author{八登崇之\ （Takayuki YATO; aka.~``ZR''）}
 \date{v\PkgVersion\quad[\PkgDate]}
 \maketitle
@@ -35,432 +39,615 @@
 インタフェースを提供する。
 \end{abstract}
 
+\tableofcontents
+
 %===========================================================
-\small
-\begin{verbatim}
-■ 本ソフトウェアの作者のサイト
+\section{パッケージ読込}
+\label{sec:Loading}
 
-    En toi Pythmeni tes TeXnopoleos ～電脳世界の奥底にて～
-    http://zrbabbler.sp.land.to/
+\begin{myverbatim}
+\usepackage[<オプション>]{pxcjkcat}
+\end{myverbatim}
 
-    ※ 以下のページに一部機能の使用例を紹介した。
-    「upLaTeX を使おう」
-    http://zrbabbler.sp.land.to/uplatex.html
-    「PXbase パッケージ」
-    http://zrbabbler.sp.land.to/pxbase.html
+オプションとして以下のものが指定できる。
 
-■ インストール
+\begin{itemize}
+\item |ccv1|\Means
+  「モードCCV」を1（{\upTeX} v0.11～0.28と互換）とする。
+\item |ccv2|\Means
+  「モードCCV」を2（{\upTeX} v0.29～1.22と互換）とする。
+\item |ccv3|\Means
+  「モードCCV」を3（{\upTeX} v1.23以降と互換）とする。
+\item |ccv+|\Means
+  「モードCCV」をエンジンの実のCCVと一致させる。
+  \Note 「モードCCV」については\ref{sec:CCV}節を参照。
+\item |\cjkcategorymode| \strong{命令で有効なモード値}\Means
+  和文カテゴリがモードに従って設定される。
+  \Note モード値オプションが非指定の場合は、パッケージ読込時に
+  和文カテゴリが変更されることはない。
+\end{itemize}
 
-    TDS 1.1 に従ったシステムでは、各ファイルを次の場所に移動する。
-    ・*.sty        → $TEXMF/tex/platex/PXcjkcat/
-    (残りのファイルは不要)
+%===========================================================
+\section{機能}
+\label{sec:Function}
 
-    W32TeX を C:\usr\local にインストールした場合の例。
-    ・*.sty      → C:\usr\local\share\texmf-local\tex\platex\PXcjkcat
+\begin{itemize}
+\item |\cjkcategory{|\Meta{ブロック}|,...}{|\Meta{カテゴリ}|}|\Means
+  \Meta{ブロック}で表される文字ブロック（複数指定が可能）の
+  和文カテゴリを\Meta{カテゴリ}に変更する。
+
+  \Meta{ブロック}は以下の何れかの形式で指定する：
+  \begin{itemize}
+  \item ブロックID（後述）
+  %\item ブロック名
+  \item 非ASCII文字1つ\Means
+    その文字の属するブロックを指す。
+  %\item 整数値\Means
+  %  その符号位置の属するブロックを指す。
+  \end{itemize}
+  \Meta{カテゴリ}は以下に示す「カテゴリID」で指定する
+    \footnote{括弧内の整数値は{\upTeX}が内部で用いている
+      「カテゴリコード値」であり、「カテゴリID」の代わりに
+      この値を指定することもできる。}：
+  \begin{itemize}
+  \item |noncjk|（15）\Means 欧文扱い
+  \item |kanji|または|han|（16）\Means 漢字扱い
+  \item |kana|（17）\Means 仮名扱い
+  \item |cjk|（18）\Means \<「その他の和文」扱い
+  \item |hangul|（19）\Means ハングル扱い
+  \end{itemize}
+
+  和文カテゴリの変更は局所的（グルーピングに従う）である。
+
+\item |\cjkcategorymode{|\Meta{モード}|}|\Means
+  全てのブロックの和文カテゴリの一括設定（モード設定）を行う。
+  モードには以下のものがある。
+  何れのセットも、後述する「CJK中核セット」の設定は共通であり、
+  それ以外のブロックが欧文扱い（|noncjk|）であるか
+  和文扱い（|cjk|）であるかが異なる。
+  \begin{itemize}
+  \item |forcecjk|\Means
+    ASCII文字のみ欧文扱いで他のブロックは全て和文扱い
+    （|noncjk| 以外）とする。
+    和文フォントの中のUnicode値の割当がある全ての文字を
+    和文文字として直接用いることができる。
+  \item |default|\Means
+    指定のモードCCVにおける既定の設定と一致させる。
+    \Note モードCCVが2以下の場合は |forcecjk| と同一の設定になる。
+    \Note モードCCVがエンジンの実のCCVと一致する場合
+      （|ccv+| オプション指定の場合を含む）は、
+      エンジンの既定の設定と一致する。
+  \item |prefercjk|\Means
+    和文扱いのブロックとして、「CJK中核セット」のものに加えて、
+    「Adobeの定めるCJK文字集合
+    \footnote{Adobe-Japan1、Adobe-GB1、Adobe-CNS1、Adobe-Korea1。}%
+    の何れかと共通部分をもつ文字ブロック」を加えて、
+    残りを欧文扱いに設定する。
+  \item |prefercjkvar|\Means
+    |prefercjk| において、ギリシャ・キリル文字の
+    ブロックを欧文扱いに変更したもの。
+  \item |japanese|\Means
+    和文扱いのブロックとして、「CJK中核セット」のものに加えて、
+    「Adobe-Japan1の全角幅のグリフ
+    の何れかと共通部分をもつ文字ブロック」を加えて、
+    残りを欧文扱いに設定する。
+  \item |japanesevar|\Means
+    |japanese| において、ギリシャ・キリル文字の
+    ブロックを欧文扱いに変更したもの。
+  \item |prefernoncjk|\Means
+    「CJK中核セット」のブロックのみを和文扱いとし、
+    残りを欧文扱いにする。
+  \end{itemize}
+
+  ここで「CJK中核セット」の内容は以下のとおりである。
+    \begin{itemize}
+    \item 漢字・部首・注音字母\Means |kanji| に設定。
+    \item ひらがな・カタカナ\Means |kana| に設定。
+    \item CJK記号の一部・全角半角互換形・彝文字
+      ・西夏文字・女書文字\Means |cjk| に設定
+      \footnote{モードCCVが2の場合、|cjk12| の再分割の
+        中の |cjk1b|、|cjk1c| は |kana| に変更される。}。
+    \item ハングル完成形・ハングル字母\Means |hangul| に設定。
+  \end{itemize}
+  \Note 各モードでの具体的な設定値については\ref{sec:Values}節を参照。
+
+\end{itemize}
+
+%===========================================================
+\section{文字分類バージョン（CCV）}
+\label{sec:CCV}
+
+{\upTeX}エンジンでの文字ブロックの分割および各ブロックの
+和文カテゴリの既定値は改版時に変更され、
+これが互換性の問題を起こす可能性がある。
+本パッケージでは、パッケージの機能を用いて設定された
+和文カテゴリの値がエンジンの改版により変化することを防ぐため、
+「特定のエンジンのバージョンを指定して、その動作を模倣する」
+という方針をとる。
+
+\subsection{文字分類バージョンとは何か}
+
+\begin{itemize}
+\item 文字ブロックの分割の違いを
+  「\strong{文字分類バージョン}（CCV；Character Category Version）」
+  と呼ぶことにする。
+  現状では次のものが存在する。
+  \begin{itemize}
+  \item バージョン1： {\upTeX} v0.11～0.28と互換
+  \item バージョン2： {\upTeX} v0.29～1.22と互換
+  \item バージョン3： {\upTeX} v1.23以降と互換
+  \end{itemize}
+
+\item \Pkg{pxcjkcat}の読込時に、そのオプションにおいて
+  「その文書が依拠するCCVの値」（これを\strong{モードCCV}と呼ぶ）
+  を指定する。
+  すなわち、オプション |ccv|$N$（$N=\mbox{1～3}$）を指定すると、
+  モードCCVが$N$になる。
+
+\item モードCCVを使用するエンジンの実のCCVと常に一致させたい場合は、
+  |ccv+| というオプションを指定すればよい。
+  ただしこの場合は当然、和文カテゴリ設定がエンジンの版に
+  依存することになる。
+
+\item モードCCVの既定値は1（|ccv1|）である。
+  この場合、ブロック分割の状態はUnicode%
+  \footnote{エンジンの版に対応する版のUnicode。}%
+  のブロック定義と完全に一致する。
+
+\item モード設定で |default| を指定した場合は、
+  和文カテゴリの設定は
+  「モードCCVに対応するエンジンの版の既定値」
+  に一致する。
+  他のモード設定の実際の設定値も |default| を基礎にして
+  決まるので、モードCCVにより多少の差異が出る。
+
+\end{itemize}
+
+\subsection{注意事項}
+
+\begin{itemize}
+\item Unicodeの改版による「文字ブロックの追加」については
+  「当該の版のエンジンで未対応の文字ブロックの文字は
+  決して使われない」
+  ことを仮定すれば互換性を損なうことがないため、
+  特に対策を行わない。
+
+  従って、エンジンの改版が「文字ブロックの追加」だけを伴う場合は、
+  それは新しいCCVとは見なされない。
+  例えば、v1.00→v1.10の改修では幾つかのブロックが追加されたが、
+  CCVは2のままである。
+
+\item もちろん、「旧版の動作の模倣」は本パッケージの機能を用いた
+  場合に限られ、{\upTeX}エンジンの和文カテゴリコード（kcatcode）の
+  処理自体は何も変更されない。
+  また、本パッケージの機能を用いる以外の方法
+  （エンジン既定のままの場合を含む）
+  で設定された和文カテゴリ値については、
+  当然、エンジンの版による差異が生じうる。
+
+\end{itemize}
 
 
------------------------------------------------------
- pxcjkcat パッケージ (v1.0) -- 和文文字カテゴリ操作 
------------------------------------------------------
+%===========================================================
+\section{文字ブロック}
+\label{sec:Blocks}
 
-■ 対応環境
+%-------------------
+\subsection{Unicodeブロックの一覧}
 
-    upLaTeX2e (v0.11 以降)
+以下は、Unicodeが定めるブロックと直接に対応するブロックの一覧である。
+この表の「ブロックID」の欄が、|\cjkcategory| 命令で指定する
+ブロックIDを示す。
+「CCV」の欄は、そのブロックがサポートされるモードCCVの
+範囲の下限を表す。
+\footnote{ここで示すサポート範囲は「必要条件」であることに注意。
+  先述の通り、エンジンの改版でブロックが（分割変更でなく）
+  新規追加された場合には以前のCCVの値を引き継ぐ。
+  このため、サポート範囲が「2」のブロックは、
+  モードCCVが2であっても“実際には使えない”可能性がある。
+  （モードCCVが3以上なら必ず使えて、1なら必ず使えない。）
+  “実際には使えない”ブロックに設定を試みた場合は、
+  警告が出て設定が無視される。}
 
-■ 読込
+\begin{quote}
+\renewcommand{\baselinestretch}{0.9}\small
+\setlength{\parskip}{0pt}
+\newcommand*\xI[1]{\makebox[4em][l]{\texttt{#1}}\ignorespaces}
+\newcommand*\xV[1]{\makebox[2em][c]{#1}\hspace*{1em}\ignorespaces}
+\newcommand*\xR[2]{\Code{U+}\makebox[3em][r]{\Code{#1}}%
+    ~～~\makebox[3em][r]{\Code{#2}}\hspace*{1em}\ignorespaces}
+\newcommand*\xN[1]{#1}
+\hspace*{-1em}%header-line
+\makebox[5em][l]{ブロック\mbox{}ID}\makebox[2em][c]{CCV}%
+\makebox[10em][c]{符号値範囲}\makebox{ブロック名称}\par
+\xI{latn}  \xV{1} \xR  {0000}  {007F} \xN{Basic Latin}\par
+%/////////////////////////////
+\xI{latn}  \xV{1} \xR  {0000}  {007F} \xN{Basic Latin}\par
+\xI{latn1} \xV{1} \xR  {0080}  {00FF} \xN{Latin-1 Supplement}\par
+\xI{latnA} \xV{1} \xR  {0100}  {017F} \xN{Latin Extended-A}\par
+\xI{latnB} \xV{1} \xR  {0180}  {024F} \xN{Latin Extended-B}\par
+\xI{latn2} \xV{1} \xR  {0250}  {02AF} \xN{IPA Extensions}\par
+\xI{sym01} \xV{1} \xR  {02B0}  {02FF} \xN{Spacing Modifier Letters}\par
+\xI{sym02} \xV{1} \xR  {0300}  {036F} \xN{Combining Diacritical Marks}\par
+\xI{grek}  \xV{1} \xR  {0370}  {03FF} \xN{Greek and Coptic}\par
+\xI{cyrl}  \xV{1} \xR  {0400}  {04FF} \xN{Cyrillic}\par
+\xI{cyrl1} \xV{1} \xR  {0500}  {052F} \xN{Cyrillic Supplement}\par
+\xI{armn}  \xV{1} \xR  {0530}  {058F} \xN{Armenian}\par
+\xI{hebr}  \xV{1} \xR  {0590}  {05FF} \xN{Hebrew}\par
+\xI{arab}  \xV{1} \xR  {0600}  {06FF} \xN{Arabic}\par
+\xI{syrc}  \xV{1} \xR  {0700}  {074F} \xN{Syriac}\par
+\xI{arab1} \xV{1} \xR  {0750}  {077F} \xN{Arabic Supplement}\par
+\xI{thaa}  \xV{1} \xR  {0780}  {07BF} \xN{Thaana}\par
+\xI{nkoo}  \xV{1} \xR  {07C0}  {07FF} \xN{NKo}\par
+\xI{samr}  \xV{2} \xR  {0800}  {083F} \xN{Samaritan}\par
+\xI{mand}  \xV{2} \xR  {0840}  {085F} \xN{Mandaic}\par
+\xI{syrc1} \xV{3} \xR  {0860}  {086F} \xN{Syriac Supplement}\par
+\xI{arabA} \xV{2} \xR  {08A0}  {08FF} \xN{Arabic Extended-A}\par
+\xI{deva}  \xV{1} \xR  {0900}  {097F} \xN{Devanagari}\par
+\xI{beng}  \xV{1} \xR  {0980}  {09FF} \xN{Bengali}\par
+\xI{guru}  \xV{1} \xR  {0A00}  {0A7F} \xN{Gurmukhi}\par
+\xI{gujr}  \xV{1} \xR  {0A80}  {0AFF} \xN{Gujarati}\par
+\xI{orya}  \xV{1} \xR  {0B00}  {0B7F} \xN{Oriya}\par
+\xI{taml}  \xV{1} \xR  {0B80}  {0BFF} \xN{Tamil}\par
+\xI{telu}  \xV{1} \xR  {0C00}  {0C7F} \xN{Telugu}\par
+\xI{knda}  \xV{1} \xR  {0C80}  {0CFF} \xN{Kannada}\par
+\xI{mlym}  \xV{1} \xR  {0D00}  {0D7F} \xN{Malayalam}\par
+\xI{sinh}  \xV{1} \xR  {0D80}  {0DFF} \xN{Sinhala}\par
+\xI{thai}  \xV{1} \xR  {0E00}  {0E7F} \xN{Thai}\par
+\xI{laoo}  \xV{1} \xR  {0E80}  {0EFF} \xN{Lao}\par
+\xI{tibt}  \xV{1} \xR  {0F00}  {0FFF} \xN{Tibetan}\par
+\xI{mymr}  \xV{1} \xR  {1000}  {109F} \xN{Myanmar}\par
+\xI{geor}  \xV{1} \xR  {10A0}  {10FF} \xN{Georgian}\par
+\xI{hang1} \xV{1} \xR  {1100}  {11FF} \xN{Hangul Jamo}\par
+\xI{ethi}  \xV{1} \xR  {1200}  {137F} \xN{Ethiopic}\par
+\xI{ethi1} \xV{1} \xR  {1380}  {139F} \xN{Ethiopic Supplement}\par
+\xI{cher}  \xV{1} \xR  {13A0}  {13FF} \xN{Cherokee}\par
+\xI{cans}  \xV{1} \xR  {1400}  {167F} \xN{Unified Canadian Aboriginal Syllabics}\par
+\xI{ogam}  \xV{1} \xR  {1680}  {169F} \xN{Ogham}\par
+\xI{runr}  \xV{1} \xR  {16A0}  {16FF} \xN{Runic}\par
+\xI{tglg}  \xV{1} \xR  {1700}  {171F} \xN{Tagalog}\par
+\xI{hano}  \xV{1} \xR  {1720}  {173F} \xN{Hanunoo}\par
+\xI{buhd}  \xV{1} \xR  {1740}  {175F} \xN{Buhid}\par
+\xI{tagb}  \xV{1} \xR  {1760}  {177F} \xN{Tagbanwa}\par
+\xI{khmr}  \xV{1} \xR  {1780}  {17FF} \xN{Khmer}\par
+\xI{mong}  \xV{1} \xR  {1800}  {18AF} \xN{Mongolian}\par
+\xI{cans1} \xV{2} \xR  {18B0}  {18FF} \xN{Unified Canadian Aboriginal Syllabics Extended}\par
+\xI{limb}  \xV{1} \xR  {1900}  {194F} \xN{Limbu}\par
+\xI{tale}  \xV{1} \xR  {1950}  {197F} \xN{Tai Le}\par
+\xI{talu}  \xV{1} \xR  {1980}  {19DF} \xN{New Tai Lue}\par
+\xI{khmr1} \xV{1} \xR  {19E0}  {19FF} \xN{Khmer Symbols}\par
+\xI{bugi}  \xV{1} \xR  {1A00}  {1A1F} \xN{Buginese}\par
+\xI{lana}  \xV{2} \xR  {1A20}  {1AAF} \xN{Tai Tham}\par
+\xI{sym52} \xV{2} \xR  {1AB0}  {1AFF} \xN{Combining Diacritical Marks Extended}\par
+\xI{bali}  \xV{1} \xR  {1B00}  {1B7F} \xN{Balinese}\par
+\xI{sund}  \xV{2} \xR  {1B80}  {1BBF} \xN{Sundanese}\par
+\xI{batk}  \xV{2} \xR  {1BC0}  {1BFF} \xN{Batak}\par
+\xI{lepc}  \xV{2} \xR  {1C00}  {1C4F} \xN{Lepcha}\par
+\xI{olck}  \xV{2} \xR  {1C50}  {1C7F} \xN{Ol Chiki}\par
+\xI{cyrlC} \xV{2} \xR  {1C80}  {1C8F} \xN{Cyrillic Extended-C}\par
+\xI{sund1} \xV{2} \xR  {1CC0}  {1CCF} \xN{Sundanese Supplement}\par
+\xI{sym38} \xV{2} \xR  {1CD0}  {1CFF} \xN{Vedic Extensions}\par
+\xI{latn4} \xV{1} \xR  {1D00}  {1D7F} \xN{Phonetic Extensions}\par
+\xI{latn5} \xV{1} \xR  {1D80}  {1DBF} \xN{Phonetic Extensions Supplement}\par
+\xI{sym03} \xV{1} \xR  {1DC0}  {1DFF} \xN{Combining Diacritical Marks Supplement}\par
+\xI{latn3} \xV{1} \xR  {1E00}  {1EFF} \xN{Latin Extended Additional}\par
+\xI{grek1} \xV{1} \xR  {1F00}  {1FFF} \xN{Greek Extended}\par
+\xI{sym04} \xV{1} \xR  {2000}  {206F} \xN{General Punctuation}\par
+\xI{sym05} \xV{1} \xR  {2070}  {209F} \xN{Superscripts and Subscripts}\par
+\xI{sym06} \xV{1} \xR  {20A0}  {20CF} \xN{Currency Symbols}\par
+\xI{sym07} \xV{1} \xR  {20D0}  {20FF} \xN{Combining Diacritical Marks for Symbols}\par
+\xI{sym08} \xV{1} \xR  {2100}  {214F} \xN{Letterlike Symbols}\par
+\xI{sym09} \xV{1} \xR  {2150}  {218F} \xN{Number Forms}\par
+\xI{sym10} \xV{1} \xR  {2190}  {21FF} \xN{Arrows}\par
+\xI{sym11} \xV{1} \xR  {2200}  {22FF} \xN{Mathematical Operators}\par
+\xI{sym12} \xV{1} \xR  {2300}  {23FF} \xN{Miscellaneous Technical}\par
+\xI{sym13} \xV{1} \xR  {2400}  {243F} \xN{Control Pictures}\par
+\xI{sym14} \xV{1} \xR  {2440}  {245F} \xN{Optical Character Recognition}\par
+\xI{sym15} \xV{1} \xR  {2460}  {24FF} \xN{Enclosed Alphanumerics}\par
+\xI{sym16} \xV{1} \xR  {2500}  {257F} \xN{Box Drawing}\par
+\xI{sym17} \xV{1} \xR  {2580}  {259F} \xN{Block Elements}\par
+\xI{sym18} \xV{1} \xR  {25A0}  {25FF} \xN{Geometric Shapes}\par
+\xI{sym19} \xV{1} \xR  {2600}  {26FF} \xN{Miscellaneous Symbols}\par
+\xI{sym20} \xV{1} \xR  {2700}  {27BF} \xN{Dingbats}\par
+\xI{sym21} \xV{1} \xR  {27C0}  {27EF} \xN{Miscellaneous Mathematical Symbols-A}\par
+\xI{sym22} \xV{1} \xR  {27F0}  {27FF} \xN{Supplemental Arrows-A}\par
+\xI{brai}  \xV{1} \xR  {2800}  {28FF} \xN{Braille Patterns}\par
+\xI{sym23} \xV{1} \xR  {2900}  {297F} \xN{Supplemental Arrows-B}\par
+\xI{sym24} \xV{1} \xR  {2980}  {29FF} \xN{Miscellaneous Mathematical Symbols-B}\par
+\xI{sym25} \xV{1} \xR  {2A00}  {2AFF} \xN{Supplemental Mathematical Operators}\par
+\xI{sym26} \xV{1} \xR  {2B00}  {2BFF} \xN{Miscellaneous Symbols and Arrows}\par
+\xI{glag}  \xV{1} \xR  {2C00}  {2C5F} \xN{Glagolitic}\par
+\xI{latnC} \xV{1} \xR  {2C60}  {2C7F} \xN{Latin Extended-C}\par
+\xI{copt}  \xV{1} \xR  {2C80}  {2CFF} \xN{Coptic}\par
+\xI{geor1} \xV{1} \xR  {2D00}  {2D2F} \xN{Georgian Supplement}\par
+\xI{tfng}  \xV{1} \xR  {2D30}  {2D7F} \xN{Tifinagh}\par
+\xI{ethi2} \xV{1} \xR  {2D80}  {2DDF} \xN{Ethiopic Extended}\par
+\xI{cyrlA} \xV{2} \xR  {2DE0}  {2DFF} \xN{Cyrillic Extended-A}\par
+\xI{sym27} \xV{1} \xR  {2E00}  {2E7F} \xN{Supplemental Punctuation}\par
+\xI{cjk01} \xV{1} \xR  {2E80}  {2EFF} \xN{CJK Radicals Supplement}\par
+\xI{cjk02} \xV{1} \xR  {2F00}  {2FDF} \xN{Kangxi Radicals}\par
+\xI{cjk03} \xV{1} \xR  {2FF0}  {2FFF} \xN{Ideographic Description Characters}\par
+\xI{cjk04} \xV{1} \xR  {3000}  {303F} \xN{CJK Symbols and Punctuation}\par
+\xI{hira}  \xV{1} \xR  {3040}  {309F} \xN{Hiragana}\par
+\xI{kana}  \xV{1} \xR  {30A0}  {30FF} \xN{Katakana}\par
+\xI{bopo}  \xV{1} \xR  {3100}  {312F} \xN{Bopomofo}\par
+\xI{hang2} \xV{1} \xR  {3130}  {318F} \xN{Hangul Compatibility Jamo}\par
+\xI{cjk05} \xV{1} \xR  {3190}  {319F} \xN{Kanbun}\par
+\xI{bopo1} \xV{1} \xR  {31A0}  {31BF} \xN{Bopomofo Extended}\par
+\xI{cjk06} \xV{1} \xR  {31C0}  {31EF} \xN{CJK Strokes}\par
+\xI{kana1} \xV{1} \xR  {31F0}  {31FF} \xN{Katakana Phonetic Extensions}\par
+\xI{cjk07} \xV{1} \xR  {3200}  {32FF} \xN{Enclosed CJK Letters and Months}\par
+\xI{cjk08} \xV{1} \xR  {3300}  {33FF} \xN{CJK Compatibility}\par
+\xI{haniA} \xV{1} \xR  {3400}  {4DBF} \xN{CJK Unified Ideographs Extension A}\par
+\xI{sym28} \xV{1} \xR  {4DC0}  {4DFF} \xN{Yijing Hexagram Symbols}\par
+\xI{hani}  \xV{1} \xR  {4E00}  {9FFF} \xN{CJK Unified Ideographs}\par
+\xI{yiii}  \xV{1} \xR  {A000}  {A48F} \xN{Yi Syllables}\par
+\xI{yiii1} \xV{1} \xR  {A490}  {A4CF} \xN{Yi Radicals}\par
+\xI{lisu}  \xV{2} \xR  {A4D0}  {A4FF} \xN{Lisu}\par
+\xI{vaii}  \xV{2} \xR  {A500}  {A63F} \xN{Vai}\par
+\xI{cyrlB} \xV{2} \xR  {A640}  {A69F} \xN{Cyrillic Extended-B}\par
+\xI{bamu}  \xV{2} \xR  {A6A0}  {A6FF} \xN{Bamum}\par
+\xI{sym29} \xV{1} \xR  {A700}  {A71F} \xN{Modifier Tone Letters}\par
+\xI{latnD} \xV{1} \xR  {A720}  {A7FF} \xN{Latin Extended-D}\par
+\xI{sylo}  \xV{1} \xR  {A800}  {A82F} \xN{Syloti Nagri}\par
+\xI{sym39} \xV{2} \xR  {A830}  {A83F} \xN{Common Indic Number Forms}\par
+\xI{phag}  \xV{1} \xR  {A840}  {A87F} \xN{Phags-pa}\par
+\xI{saur}  \xV{2} \xR  {A880}  {A8DF} \xN{Saurashtra}\par
+\xI{deva1} \xV{2} \xR  {A8E0}  {A8FF} \xN{Devanagari Extended}\par
+\xI{kali}  \xV{2} \xR  {A900}  {A92F} \xN{Kayah Li}\par
+\xI{rjng}  \xV{2} \xR  {A930}  {A95F} \xN{Rejang}\par
+\xI{hangA} \xV{2} \xR  {A960}  {A97F} \xN{Hangul Jamo Extended-A}\par
+\xI{java}  \xV{2} \xR  {A980}  {A9DF} \xN{Javanese}\par
+\xI{mymrB} \xV{2} \xR  {A9E0}  {A9FF} \xN{Myanmar Extended-B}\par
+\xI{cham}  \xV{2} \xR  {AA00}  {AA5F} \xN{Cham}\par
+\xI{mymrA} \xV{2} \xR  {AA60}  {AA7F} \xN{Myanmar Extended-A}\par
+\xI{tavt}  \xV{2} \xR  {AA80}  {AADF} \xN{Tai Viet}\par
+\xI{mtei1} \xV{2} \xR  {AAE0}  {AAFF} \xN{Meetei Mayek Extensions}\par
+\xI{ethiA} \xV{2} \xR  {AB00}  {AB2F} \xN{Ethiopic Extended-A}\par
+\xI{latnE} \xV{2} \xR  {AB30}  {AB6F} \xN{Latin Extended-E}\par
+\xI{cher1} \xV{2} \xR  {AB70}  {ABBF} \xN{Cherokee Supplement}\par
+\xI{mtei}  \xV{2} \xR  {ABC0}  {ABFF} \xN{Meetei Mayek}\par
+\xI{hang}  \xV{1} \xR  {AC00}  {D7AF} \xN{Hangul Syllables}\par
+\xI{hangB} \xV{2} \xR  {D7B0}  {D7FF} \xN{Hangul Jamo Extended-B}\par
+\xI{spc01} \xV{1} \xR  {D800}  {DB7F} \xN{High Surrogates}\par
+\xI{spc02} \xV{1} \xR  {DB80}  {DBFF} \xN{High Private Use Surrogates}\par
+\xI{spc03} \xV{1} \xR  {DC00}  {DFFF} \xN{Low Surrogates}\par
+\xI{spc04} \xV{1} \xR  {E000}  {F8FF} \xN{Private Use Area}\par
+\xI{hani1} \xV{1} \xR  {F900}  {FAFF} \xN{CJK Compatibility Ideographs}\par
+\xI{latn6} \xV{1} \xR  {FB00}  {FB4F} \xN{Alphabetic Presentation Forms}\par
+\xI{arab2} \xV{1} \xR  {FB50}  {FDFF} \xN{Arabic Presentation Forms-A}\par
+\xI{spc05} \xV{1} \xR  {FE00}  {FE0F} \xN{Variation Selectors}\par
+\xI{cjk09} \xV{1} \xR  {FE10}  {FE1F} \xN{Vertical Forms}\par
+\xI{sym30} \xV{1} \xR  {FE20}  {FE2F} \xN{Combining Half Marks}\par
+\xI{cjk10} \xV{1} \xR  {FE30}  {FE4F} \xN{CJK Compatibility Forms}\par
+\xI{cjk11} \xV{1} \xR  {FE50}  {FE6F} \xN{Small Form Variants}\par
+\xI{arab3} \xV{1} \xR  {FE70}  {FEFF} \xN{Arabic Presentation Forms-B}\par
+\xI{cjk12} \xV{1} \xR  {FF00}  {FFEF} \xN{Halfwidth and Fullwidth Forms}\par
+\xI{spc06} \xV{1} \xR  {FFF0}  {FFFF} \xN{Specials}\par
+\xI{linb}  \xV{1} \xR {10000} {1007F} \xN{Linear B Syllabary}\par
+\xI{linb1} \xV{1} \xR {10080} {100FF} \xN{Linear B Ideograms}\par
+\xI{sym31} \xV{1} \xR {10100} {1013F} \xN{Aegean Numbers}\par
+\xI{grek2} \xV{1} \xR {10140} {1018F} \xN{Ancient Greek Numbers}\par
+\xI{sym40} \xV{2} \xR {10190} {101CF} \xN{Ancient Symbols}\par
+\xI{sym41} \xV{2} \xR {101D0} {101FF} \xN{Phaistos Disc}\par
+\xI{lyci}  \xV{2} \xR {10280} {1029F} \xN{Lycian}\par
+\xI{cari}  \xV{2} \xR {102A0} {102DF} \xN{Carian}\par
+\xI{copt1} \xV{2} \xR {102E0} {102FF} \xN{Coptic Epact Numbers}\par
+\xI{ital}  \xV{1} \xR {10300} {1032F} \xN{Old Italic}\par
+\xI{goth}  \xV{1} \xR {10330} {1034F} \xN{Gothic}\par
+\xI{perm}  \xV{2} \xR {10350} {1037F} \xN{Old Permic}\par
+\xI{ugar}  \xV{1} \xR {10380} {1039F} \xN{Ugaritic}\par
+\xI{xpeo}  \xV{1} \xR {103A0} {103DF} \xN{Old Persian}\par
+\xI{dsrt}  \xV{1} \xR {10400} {1044F} \xN{Deseret}\par
+\xI{shaw}  \xV{1} \xR {10450} {1047F} \xN{Shavian}\par
+\xI{osma}  \xV{1} \xR {10480} {104AF} \xN{Osmanya}\par
+\xI{osge}  \xV{2} \xR {104B0} {104FF} \xN{Osage}\par
+\xI{elba}  \xV{2} \xR {10500} {1052F} \xN{Elbasan}\par
+\xI{aghb}  \xV{2} \xR {10530} {1056F} \xN{Caucasian Albanian}\par
+\xI{lina}  \xV{2} \xR {10600} {1077F} \xN{Linear A}\par
+\xI{cprt}  \xV{1} \xR {10800} {1083F} \xN{Cypriot Syllabary}\par
+\xI{armi}  \xV{2} \xR {10840} {1085F} \xN{Imperial Aramaic}\par
+\xI{palm}  \xV{2} \xR {10860} {1087F} \xN{Palmyrene}\par
+\xI{nbat}  \xV{2} \xR {10880} {108AF} \xN{Nabataean}\par
+\xI{hatr}  \xV{2} \xR {108E0} {108FF} \xN{Hatran}\par
+\xI{phnx}  \xV{1} \xR {10900} {1091F} \xN{Phoenician}\par
+\xI{lydi}  \xV{2} \xR {10920} {1093F} \xN{Lydian}\par
+\xI{mero}  \xV{2} \xR {10980} {1099F} \xN{Meroitic Hieroglyphs}\par
+\xI{merc}  \xV{2} \xR {109A0} {109FF} \xN{Meroitic Cursive}\par
+\xI{khar}  \xV{1} \xR {10A00} {10A5F} \xN{Kharoshthi}\par
+\xI{sarb}  \xV{2} \xR {10A60} {10A7F} \xN{Old South Arabian}\par
+\xI{narb}  \xV{2} \xR {10A80} {10A9F} \xN{Old North Arabian}\par
+\xI{mani}  \xV{2} \xR {10AC0} {10AFF} \xN{Manichaean}\par
+\xI{avst}  \xV{2} \xR {10B00} {10B3F} \xN{Avestan}\par
+\xI{prti}  \xV{2} \xR {10B40} {10B5F} \xN{Inscriptional Parthian}\par
+\xI{phli}  \xV{2} \xR {10B60} {10B7F} \xN{Inscriptional Pahlavi}\par
+\xI{phlp}  \xV{2} \xR {10B80} {10BAF} \xN{Psalter Pahlavi}\par
+\xI{orkh}  \xV{2} \xR {10C00} {10C4F} \xN{Old Turkic}\par
+\xI{hung}  \xV{2} \xR {10C80} {10CFF} \xN{Old Hungarian}\par
+\xI{sym42} \xV{2} \xR {10E60} {10E7F} \xN{Rumi Numeral Symbols}\par
+\xI{brah}  \xV{2} \xR {11000} {1107F} \xN{Brahmi}\par
+\xI{kthi}  \xV{2} \xR {11080} {110CF} \xN{Kaithi}\par
+\xI{sora}  \xV{2} \xR {110D0} {110FF} \xN{Sora Sompeng}\par
+\xI{cakm}  \xV{2} \xR {11100} {1114F} \xN{Chakma}\par
+\xI{mahj}  \xV{2} \xR {11150} {1117F} \xN{Mahajani}\par
+\xI{shrd}  \xV{2} \xR {11180} {111DF} \xN{Sharada}\par
+\xI{sinh1} \xV{2} \xR {111E0} {111FF} \xN{Sinhala Archaic Numbers}\par
+\xI{khoj}  \xV{2} \xR {11200} {1124F} \xN{Khojki}\par
+\xI{mult}  \xV{2} \xR {11280} {112AF} \xN{Multani}\par
+\xI{sind}  \xV{2} \xR {112B0} {112FF} \xN{Khudawadi}\par
+\xI{gran}  \xV{2} \xR {11300} {1137F} \xN{Grantha}\par
+\xI{newa}  \xV{2} \xR {11400} {1147F} \xN{Newa}\par
+\xI{tirh}  \xV{2} \xR {11480} {114DF} \xN{Tirhuta}\par
+\xI{sidd}  \xV{2} \xR {11580} {115FF} \xN{Siddham}\par
+\xI{modi}  \xV{2} \xR {11600} {1165F} \xN{Modi}\par
+\xI{mong1} \xV{2} \xR {11660} {1167F} \xN{Mongolian Supplement}\par
+\xI{takr}  \xV{2} \xR {11680} {116CF} \xN{Takri}\par
+\xI{ahom}  \xV{2} \xR {11700} {1173F} \xN{Ahom}\par
+\xI{wara}  \xV{2} \xR {118A0} {118FF} \xN{Warang Citi}\par
+\xI{zanb}  \xV{3} \xR {11A00} {11A4F} \xN{Zanabazar Square}\par
+\xI{soyo}  \xV{3} \xR {11A50} {11AAF} \xN{Soyombo}\par
+\xI{pauc}  \xV{2} \xR {11AC0} {11AFF} \xN{Pau Cin Hau}\par
+\xI{bhks}  \xV{2} \xR {11C00} {11C6F} \xN{Bhaiksuki}\par
+\xI{marc}  \xV{2} \xR {11C70} {11CBF} \xN{Marchen}\par
+\xI{gonm}  \xV{3} \xR {11D00} {11D5F} \xN{Masaram Gondi}\par
+\xI{xsux}  \xV{1} \xR {12000} {123FF} \xN{Cuneiform}\par
+\xI{xsux1} \xV{1} \xR {12400} {1247F} \xN{Cuneiform Numbers and Punctuation}\par
+\xI{xsux2} \xV{2} \xR {12480} {1254F} \xN{Early Dynastic Cuneiform}\par
+\xI{egyp}  \xV{2} \xR {13000} {1342F} \xN{Egyptian Hieroglyphs}\par
+\xI{hluw}  \xV{2} \xR {14400} {1467F} \xN{Anatolian Hieroglyphs}\par
+\xI{bamu1} \xV{2} \xR {16800} {16A3F} \xN{Bamum Supplement}\par
+\xI{mroo}  \xV{2} \xR {16A40} {16A6F} \xN{Mro}\par
+\xI{bass}  \xV{2} \xR {16AD0} {16AFF} \xN{Bassa Vah}\par
+\xI{hmng}  \xV{2} \xR {16B00} {16B8F} \xN{Pahawh Hmong}\par
+\xI{plrd}  \xV{2} \xR {16F00} {16F9F} \xN{Miao}\par
+\xI{cjk14} \xV{2} \xR {16FE0} {16FFF} \xN{Ideographic Symbols and Punctuation}\par
+\xI{tang}  \xV{2} \xR {17000} {187FF} \xN{Tangut}\par
+\xI{tang1} \xV{2} \xR {18800} {18AFF} \xN{Tangut Components}\par
+\xI{kana2} \xV{2} \xR {1B000} {1B0FF} \xN{Kana Supplement}\par
+\xI{kanaA} \xV{3} \xR {1B100} {1B12F} \xN{Kana Extended-A}\par
+\xI{nshu}  \xV{3} \xR {1B170} {1B2FF} \xN{Nushu}\par
+\xI{dupl}  \xV{2} \xR {1BC00} {1BC9F} \xN{Duployan}\par
+\xI{sym53} \xV{2} \xR {1BCA0} {1BCAF} \xN{Shorthand Format Controls}\par
+\xI{sym32} \xV{1} \xR {1D000} {1D0FF} \xN{Byzantine Musical Symbols}\par
+\xI{sym33} \xV{1} \xR {1D100} {1D1FF} \xN{Musical Symbols}\par
+\xI{sym34} \xV{1} \xR {1D200} {1D24F} \xN{Ancient Greek Musical Notation}\par
+\xI{sym35} \xV{1} \xR {1D300} {1D35F} \xN{Tai Xuan Jing Symbols}\par
+\xI{sym36} \xV{1} \xR {1D360} {1D37F} \xN{Counting Rod Numerals}\par
+\xI{sym37} \xV{1} \xR {1D400} {1D7FF} \xN{Mathematical Alphanumeric Symbols}\par
+\xI{sgnw}  \xV{2} \xR {1D800} {1DAAF} \xN{Sutton SignWriting}\par
+\xI{glag1} \xV{2} \xR {1E000} {1E02F} \xN{Glagolitic Supplement}\par
+\xI{mend}  \xV{2} \xR {1E800} {1E8DF} \xN{Mende Kikakui}\par
+\xI{adlm}  \xV{2} \xR {1E900} {1E95F} \xN{Adlam}\par
+\xI{sym51} \xV{2} \xR {1EE00} {1EEFF} \xN{Arabic Mathematical Alphabetic Symbols}\par
+\xI{sym43} \xV{2} \xR {1F000} {1F02F} \xN{Mahjong Tiles}\par
+\xI{sym44} \xV{2} \xR {1F030} {1F09F} \xN{Domino Tiles}\par
+\xI{sym46} \xV{2} \xR {1F0A0} {1F0FF} \xN{Playing Cards}\par
+\xI{sym45} \xV{2} \xR {1F100} {1F1FF} \xN{Enclosed Alphanumeric Supplement}\par
+\xI{cjk13} \xV{2} \xR {1F200} {1F2FF} \xN{Enclosed Ideographic Supplement}\par
+\xI{sym47} \xV{2} \xR {1F300} {1F5FF} \xN{Miscellaneous Symbols and Pictographs}\par
+\xI{sym48} \xV{2} \xR {1F600} {1F64F} \xN{Emoticons}\par
+\xI{sym54} \xV{2} \xR {1F650} {1F67F} \xN{Ornamental Dingbats}\par
+\xI{sym49} \xV{2} \xR {1F680} {1F6FF} \xN{Transport and Map Symbols}\par
+\xI{sym50} \xV{2} \xR {1F700} {1F77F} \xN{Alchemical Symbols}\par
+\xI{sym55} \xV{2} \xR {1F780} {1F7FF} \xN{Geometric Shapes Extended}\par
+\xI{sym56} \xV{2} \xR {1F800} {1F8FF} \xN{Supplemental Arrows-C}\par
+\xI{sym57} \xV{2} \xR {1F900} {1F9FF} \xN{Supplemental Symbols and Pictographs}\par
+\xI{haniB} \xV{1} \xR {20000} {2A6DF} \xN{CJK Unified Ideographs Extension B}\par
+\xI{haniC} \xV{2} \xR {2A700} {2B73F} \xN{CJK Unified Ideographs Extension C}\par
+\xI{haniD} \xV{2} \xR {2B740} {2B81F} \xN{CJK Unified Ideographs Extension D}\par
+\xI{haniE} \xV{2} \xR {2B820} {2CEAF} \xN{CJK Unified Ideographs Extension E}\par
+\xI{haniF} \xV{3} \xR {2CEB0} {2EBEF} \xN{CJK Unified Ideographs Extension F}\par
+\xI{hani2} \xV{1} \xR {2F800} {2FA1F} \xN{CJK Compatibility Ideographs Supplement}\par
+\xI{spc07} \xV{1} \xR {E0000} {E007F} \xN{Tags}\par
+\xI{spc08} \xV{1} \xR {E0100} {E01EF} \xN{Variation Selectors Supplement}\par
+\xI{spc09} \xV{1} \xR {F0000} {FFFFF} \xN{Supplementary Private Use Area-A}\par
+\xI{spc10} \xV{1} \xR{100000}{10FFFF} \xN{Supplementary Private Use Area-B}\par
+%/////////////////////////////
+\end{quote}
 
-    \usepackage[<オプション>]{pxcjkcat}
+\paragraph{ブロックIDの命名規則\<（参考）}
+\mbox{}
+\begin{itemize}
+\item Unicodeブロック名にスクリプト（用字系）の名前が含まれるものは、
+  それに対するISO 15924のコード（4文字）を用いた。
+  単一のスクリプトのブロックが複数ある場合は、
+  名前が“Extended-A，B，……”のものは|A|，|B|，……を、
+  それ以外のものは|1|，|2|，……
+  （一部符号値順でない）を末尾に付加した。
+  \begin{quote}
+  “Arabic”→ |arab|； “Latin Extended-C”→ |latnC|
+  \end{quote}
+  なお、“Hiragana”のコードは |hira| だが“Katakana”は |kana| で
+  あることに注意。
+\item それ以外は、CJK関係（|cjk|）、特殊用途（|spc|）、
+  それ以外（|sym|）の3種類に恣意的に分類して、
+  後ろに2桁の番号を付けた（|cjk12| など）。
+\end{itemize}
 
-    オプションとして以下のものが指定できる。
+%-------------------
+\subsection{どのブロックが使用できるか}
 
-    ccv1
-      「モード CCV」を 1 (upTeX v0.11～0.28 と互換)とする。
-    ccv2
-      「モード CCV」を 2 (upTeX v0.29 以降と互換)とする。
-      ※「モード CCV」については後で詳述する。
-    \cjkcategorymode で有効なモード値
-      kcatcode がモードに従って設定される。これ以外の場合は、パッケージ
-      読込時の kcatcode の変更はない。
+以下では、各モードCCVにおいてサポートされるブロックの全容に
+ついて説明する。
 
-■ 機能
+\paragraph{モードCCVが1の場合}
+CCV~1ではUnicodeブロックの再分割が存在しないので、
+サポートされるブロックの全体は以下のようになる。
 
-    \cjkcategory{<ブロック>,...}{<カテゴリ>}
-      <ブロック> で表される文字ブロック(複数指定が可能)の kcatcode を
-      <カテゴリ> に変更する。<ブロック> は「ブロック ID (後述)」または
-      「ASCII 以外の文字」で指定され、後者の場合はその文字の属するブロック
-      を指す。<カテゴリ> は以下に示す様に「カテゴリ ID」または数値で指定
-      する。この変更は局所的(グルーピングに従う)である。
-      - noncjk (15): 欧文扱い
-      - kanji [または han] (16): 漢字扱い
-      - kana (17): 仮名扱い
-      - cjk (18): 「その他の和文」扱い
-      - hangul (19): ハングル扱い
-      ブロック ID の一覧および各々のカテゴリの意味については後掲。
+\begin{itemize}
+\item 前掲の通常ブロックの表で「CCV」欄が「1」の
+  ブロック全て。
+\end{itemize}
 
-    \cjkcategorymode{<モード>}
-      全てのブロックの kcatcode の一括設定を行う。モードには以下のものが
-      ある。後に揚げるものほど noncjk であるブロックが増える。各モードで
-      の具体的な設定値については「各モードでの kcatcode の値」の節を参照。
-      - forcecjk : upTeX の既定の設定と同じ。(ただし「文字分類バージョン」
-        による小さい差異がある。詳細については「文字分類バージョン」の節を
-        参照。) ASCII 文字のみ noncjk で他のブロックは全て和文扱い(noncjk
-        以外; 具体的な値は後述)。和文フォントの中の Unicode 値の割当がある
-        全ての文字を和文文字として直接用いることができる。
-      - prefercjk : 和文扱いのブロックとして、forcecjk のものに加えて、
-        Adobe の定める CJK 文字集合(Adobe-Japan1, Adobe-GB1, Adobe-CNS1,
-        Adobe-Korea1)の何れかと共通部分をもつ文字ブロックのみを加えて
-        (具体的な値は forcecjk と同じ)、残りを noncjk に設定する。
-      - prefercjkvar : prefercjk とほぼ同じで、違いは grek, grek1, cyrl
-        の 3 つ（結果的にギリシャ・キリル文字の全て)が noncjk であること。
-      - prefernoncjk : 以下に掲げる「必要最低限」のブロックを除き、全てを
-        noncjk にする。
-        * kanji: 漢字・部首・注音字母: hani, haniA, haniB, haniC, hani1,
-            hani2, cjk01, cjk02, cjk03, cjk05, cjk06, bopo, bopo1.
-        * kana: ひらがな・カタカナ: hira, kana, kana1.
-        * cjk: CJK 記号の一部・全角/半角互換形・彝文字: cjk04, cjk08, 
-            cjk07, cjk09, cjk10, cjk11, cjk12, cjk13, sym15, yiii, yiii1.
-        * hangul: ハングル完成形・ハングル字母: hang, hang1, hang2, hangA,
-            hangB.
-        ※モード CCV が 2 の場合、cjk12 の再分割の中の cjk1b, cjk1c は
-        kana に変更される。
+\paragraph{モードCCVが2の場合}
 
-■ kcatcode の値の意味
+CCV~2では |cjk12|“Halfwidth and Fullwidth Forms”のブロックが
+次の3つの下位ブロックに分割されている。
 
-    upTeX (v0.11～) では Unicode 文字を複数の文字ブロックに分類し、各文字
-    ブロック毎に kcatcode と呼ばれるパラメタを持たせている。(文字ブロック
-    の分類は Unicode 文字ブロックとほぼ一致する。) これはそのブロックに
-    属する文字が入力ソース中に現れた時の upTeX の字句解析の動作を規定する。
-    なお以下では、入力文字コードが UTF-8 であると仮定する。また文字が属する
-    ブロックの kcatcode のことを単にその文字の kcatcode と呼ぶ。
+\begin{quotation}
+  \newcommand\xE[2]{\noindent
+    \makebox[4em][l]{\texttt{#1}}\textsl{#2}\par}
+  \xE{cjk1a}{Halfwidth and Fullwidth Forms/Other}
+  \xE{cjk1b}{Halfwidth and Fullwidth Forms/Latin}
+  \xE{cjk1c}{Halfwidth and Fullwidth Forms/Kana}
+\end{quotation}
 
-    (1) ある文字の kcatcode が 15 (noncjk) である場合、その文字は和文文字
-      として扱われず、UTF-8 表現のバイト列とみなされる。字句解析の結果は
-      それらのバイトの catcode の値に依存する。例えば、文字 α(U+03B1) の
-      kcatcode が 15 の状態で α がソースに現れたら、欧文 TeX において
-      ^^8e^^b1 というバイト列が現れた時と同じ結果になる。ここで inputenc
-      で utf8 (または utf8x) を指定してあれば、inputenc における「文字 α」
-      の処理に回るはずである。
+\begin{itemize}
+\item |cjk1b|\Means ASCII 英数字の全角互換形。\par
+  |U+FF10|～|U+FF19|，|U+FF21|～|U+FF3A|，|U+FF41|～|U+FF5A|
+\item |cjk1c|\Means カタカナの半角互換形。
+  句読点等の記号は含まない。\par
+  |U+FF66|～|U+FF6F|，|U+FF71|～|U+FF9D|
+\item |cjk1a|\Means |cjk12| から |cjk1b|、|cjk1c| を除いた残り。
+\end{itemize}
 
-    (2) ある文字の kcatcode が 15 以外である場合、その文字は 1 つの文字と
-      して扱われ、次の catcode をもつ文字と同様に字句解析される。
-      - kcatcode が 18 (cjk) → catcode 12 と同様
-      - kcatcode が 16, 17, 19 → catcode 11 と同様
-      そして、コントロールシーケンスの一部でないと判断された場合は、それ
-      は指定された kcatcode を保持する和文文字トークンとなる。
+従って、サポートされるブロックの全体は以下のようになる。
 
-    (3) kcatcode が 16, 17, 18 の和文文字トークンの直後の改行文字は無視
-      される(pTeX の和文と同じ)。kcatcode が 19 の和文文字トークンの直後
-      の改行文字は空白トークンとなる(欧文と同じ)。これはハングルかななる
-      文書の組版に好都合だからである。
+\begin{itemize}
+\item 前掲の通常ブロックの表で「CCV」欄が2以下のブロック全て。
+  \Note |cjk12| のブロックも使用可能で、これは
+  “Halfwidth and Fullwidth Forms”の全体を表す。
+\item |cjk12| の下位ブロック\Means
+  |cjk1a|、|cjk1b|、|cjk1c| の3つ。
+\end{itemize}
 
-    補足:
-      - ASCII 文字は常に欧文 TeX と同じ扱いになる。従って、ASCII ブロック
-        (latn) の kcatcode 指定は意味をもたない。
-      - kcatcode を表す upTeX のプリミティブは \kcatcode<数値> で、これは
-        その数値を符号位置とする文字が属するブロックの kcatcode を指し示す
-        レジスタを表す。
 
-■ 文字分類バージョン
+\paragraph{モードCCVが3の場合}
 
-    upTeX での文字ブロックの分割(および各ブロックの kcatcode 値の既定値)は
-    改版時に変更され、これが互換性の問題を起こす可能性がある。
-      a. Unicode の改版での文字ブロックの追加に追随する為の変更。
-      b. 複数の文字種が混在する 1 つの Unicode 文字ブロックに対し、その中
-         で文字種により処理を変えたいとする要望に応えるための Unicode 文字
-         ブロックの再分割。例えば v0.29 の改版では Halfwidth and Fullwidth
-         Forms (ブロックID cjk12)が「再分割」されている。
+CCV~3では |latn1|“Latin-1 Supplement”のブロックが
+次の2つの下位ブロックに分割されている。
 
-    本パッケージでは、ブロックの分割の互換性について以下の方針を採る。
-      - a のタイプの変更は「ある版の upTeX で未対応の文字ブロックの文字は
-        その版では決して使われない」ことを仮定すれば互換性を損なうことが
-        ない。従って、これに対しては特に対策を行わない。
-      - b のタイプの変更(「再分割」と呼ぶ)は、既存のソースの動作を変更
-       することになるので、これに対しては互換性の為の対策を行う。
-      - ブロック ID を用いたブロック指定については、その対象文字集合が
-        upTeX の版により変わらないようにする。
-      - モード指定(\cjkcategorymode)を行う場合は、それによる kcatcode の
-        設定値が upTeX の版により変わらないようにする。(ただし、その版に
-        対応する Unicode の版で追加された文字を除く。)
-      - パッケージを読み込むだけでは kcatcode への変更は一切行われない。
-        従って、この場合の設定値は当然 upTeX の版に依存する。
+\begin{quotation}
+  \newcommand\xE[2]{\noindent
+    \makebox[4em][l]{\texttt{#1}}\textsl{#2}\par}
+  \xE{latnx}{Latin-1 Supplement/Other}
+  \xE{latny}{Latin-1 Supplement/Latin}
+\end{quotation}
 
-    具体的な対応をこれから述べる。まず、文字ブロックの「再分割」の違いを
-    「文字分類バージョン(CCV；Character Category Version)」と呼ぶことに
-    する。現状では次のものが存在する。
+\begin{itemize}
+\item |latny|\Means ラテン文字であるもの。\par
+  |U+FF10|～|U+FF19|，|U+FF21|～|U+FF3A|，|U+FF41|～|U+FF5A|
+\item |latnx|\Means |latn1| から |latny| を除いた残り。
+\end{itemize}
 
-        CCV 1 : upTeX v0.11 での定義
-        CCV 2 : upTeX v0.29 での定義
+従って、サポートされるブロックの全体は以下のようになる。
 
-    その上で、分割の変更について、以下のように対応する。ここでは CCV 2 に
-    おける cjk12 の再分割を例にする。
+\begin{itemize}
+\item 前掲の通常ブロックの表で「CCV」欄が2以下のブロック全て。
+  \Note |cjk12|、|latn1| のブロックも使用可能。
+\item |cjk12| の下位ブロック\Means
+  |cjk1a|、|cjk1b|、|cjk1c| の3つ。
+\item |latn1| の下位ブロック\Means
+  |latnx|、|latny| の2つ。
+\end{itemize}
 
-      - cjk12 の再分割に関しては、再分割後のブロックに新たに ID を与える
-        (cjk1a, cjk1b, cjk1c)。cjk12 も引き続き使用可能である。CCV が 2
-        以降の upTeX で cjk12 の kcatcode を変更する場合には、内部では
-        cjk1a～cjk1c を同時に変更する動作を行う。当然ながら CCV 1 の upTeX
-        では cjk1a～cjk1c の指定は使えない。
+%===========================================================
+\section{各モードにおける和文カテゴリの設定}
+\label{sec:Values}
 
-    CCV 2 では分割が変更されただけでなく、cjk1b と cjk1c の kcatcode の
-    既定値が 18(cjk) から 17(kana) に変更される。本パッケージでのモード
-    設定における kcatcode の設定値は upTeX の既定値を基礎としていて、特に
-    forcecjk は既定値と全く同じ設定としている。既定値の変更については以下
-    のように対応する。
+（あとで書く）
 
-      - パッケージオプションにおいて、「モード設定の際の設定値の基礎とする
-        CCV」(これを「モード CCV」と呼ぶ)を指定できるようにする。すなわち
-        'ccvN' (N=1～2) でモード CCV が N になる。
-      - forcecjk の設定値は CCV が「モード CCV」である upTeX の既定値と
-        一致する。それ以外のモードの設定値もそれに応じて変わる。
-      - モード CCV の既定値は 1 とする。従って、*モード設定を使用した場合*
-        は、kcatcode の設定値は用いる upTeX の CCV に依存しない。
-      - モード設定オプション無しでパッケージを読み込んだだけの場合は、
-        kcatcode の設定は何も変更されない。従ってこの場合の設定値は用いる
-        upTeX の CCV に依存する。
-
-    例として次の場合を考える。
-      [upTeX の CCV が 1]
-        (1a) \usepackage{pxcjkcat}
-        (1b) \usepackage[forcecjk]{pxcjkcat}
-        (1c) \usepackage[ccv1,forcecjk]{pxcjkcat}
-      [upTeX の CCV が 2]
-        (2a) \usepackage{pxcjkcat}
-        (2b) \usepackage[forcecjk]{pxcjkcat}
-        (2c) \usepackage[ccv1,forcecjk]{pxcjkcat}
-        (2d) \usepackage[ccv2,forcecjk]{pxcjkcat}
-    (1a)(1b)(1c)(2b)(2c) は CCV 1 の既定値、(2a)(2d) は CCV 2 の既定値と
-    同じ値に設定される。
-
-   最後の注意点として、\cjkcategory でブロック指定に「文字」を使った場合
-   は単純にその文字の属する文字ブロックとみなされ、その動作は用いる upTeX
-   の CCV に依存し、モード CCV とは無関係である。
-
-■ Unicode ブロック ID 一覧
-
-    文字分類バージョン(CCV) 1 でのブロック。ただし [2] の注釈を付したもの
-    は CCV 2 の upTeX で追加されたブロックである(先述の通り、Unicode 文字
-    ブロック追加による変更に関しては CCV は関知しない)。CCV 1 の upTeX で
-    は、例えば nkoo の範囲は実際には U+07C0～08FF となる。
-
-    ID          Unicode 範囲   名称
-    latn        0000 ..   007F Basic Latin
-    latn1       0080 ..   00FF Latin-1 Supplement
-    latnA       0100 ..   017F Latin Extended-A
-    latnB       0180 ..   024F Latin Extended-B
-    latn2       0250 ..   02AF IPA Extensions
-    sym01       02B0 ..   02FF Spacing Modifier Letters
-    sym02       0300 ..   036F Combining Diacritical Marks
-    grek        0370 ..   03FF Greek and Coptic
-    cyrl        0400 ..   04FF Cyrillic
-    cyrl1       0500 ..   052F Cyrillic Supplement
-    armn        0530 ..   058F Armenian
-    hebr        0590 ..   05FF Hebrew
-    arab        0600 ..   06FF Arabic
-    syrc        0700 ..   074F Syriac
-    arab1       0750 ..   077F Arabic Supplement
-    thaa        0780 ..   07BF Thaana
-    nkoo        07C0 ..   07FF NKo
-    samr  [2]   0800 ..   08FF Samaritan
-    deva        0900 ..   097F Devanagari
-    beng        0980 ..   09FF Bengali
-    guru        0A00 ..   0A7F Gurmukhi
-    gujr        0A80 ..   0AFF Gujarati
-    orya        0B00 ..   0B7F Oriya
-    taml        0B80 ..   0BFF Tamil
-    telu        0C00 ..   0C7F Telugu
-    knda        0C80 ..   0CFF Kannada
-    mlym        0D00 ..   0D7F Malayalam
-    sinh        0D80 ..   0DFF Sinhala
-    thai        0E00 ..   0E7F Thai
-    laoo        0E80 ..   0EFF Lao
-    tibt        0F00 ..   0FFF Tibetan
-    mymr        1000 ..   109F Myanmar
-    geor        10A0 ..   10FF Georgian
-    hang1       1100 ..   11FF Hangul Jamo
-    ethi        1200 ..   137F Ethiopic
-    ethi1       1380 ..   139F Ethiopic Supplement
-    cher        13A0 ..   13FF Cherokee
-    cans        1400 ..   167F Unified Canadian Aboriginal Syllabics
-    ogam        1680 ..   169F Ogham
-    runr        16A0 ..   16FF Runic
-    tglg        1700 ..   171F Tagalog
-    hano        1720 ..   173F Hanunoo
-    buhd        1740 ..   175F Buhid
-    tagb        1760 ..   177F Tagbanwa
-    khmr        1780 ..   17FF Khmer
-    mong        1800 ..   187F Mongolian
-    cans1 [2]   1880 ..   18FF Unified Canadian Aboriginal Syllabics
-                                 Extended
-    limb        1900 ..   194F Limbu
-    tale        1950 ..   197F Tai Le
-    talu        1980 ..   19DF New Tai Lue
-    khmr1       19E0 ..   19FF Khmer Symbols
-    bugi        1A00 ..   1A1F Buginese
-    lana  [2]   1A20 ..   1AFF Tai Tham
-    bali        1B00 ..   1B7F Balinese
-    sund  [2]   1B80 ..   1BFF Sundanese
-    lepc  [2]   1C00 ..   1C4F Lepcha
-    olck  [2]   1C50 ..   1CCF Ol Chiki
-    sym38 [2]   1CD0 ..   1CFF Vedic Extensions
-    latn4       1D00 ..   1D7F Phonetic Extensions
-    latn5       1D80 ..   1DBF Phonetic Extensions Supplement
-    sym03       1DC0 ..   1DFF Combining Diacritical Marks Supplement
-    latn3       1E00 ..   1EFF Latin Extended Additional
-    grek1       1F00 ..   1FFF Greek Extended
-    sym04       2000 ..   206F General Punctuation
-    sym05       2070 ..   209F Superscripts and Subscripts
-    sym06       20A0 ..   20CF Currency Symbols
-    sym07       20D0 ..   20FF Combining Diacritical Marks for Symbols
-    sym08       2100 ..   214F Letterlike Symbols
-    sym09       2150 ..   218F Number Forms
-    sym10       2190 ..   21FF Arrows
-    sym11       2200 ..   22FF Mathematical Operators
-    sym12       2300 ..   23FF Miscellaneous Technical
-    sym13       2400 ..   243F Control Pictures
-    sym14       2440 ..   245F Optical Character Recognition
-    sym15       2460 ..   24FF Enclosed Alphanumerics
-    sym16       2500 ..   257F Box Drawing
-    sym17       2580 ..   259F Block Elements
-    sym18       25A0 ..   25FF Geometric Shapes
-    sym19       2600 ..   26FF Miscellaneous Symbols
-    sym20       2700 ..   27BF Dingbats
-    sym21       27C0 ..   27EF Miscellaneous Mathematical Symbols-A
-    sym22       27F0 ..   27FF Supplemental Arrows-A
-    brai        2800 ..   28FF Braille Patterns
-    sym23       2900 ..   297F Supplemental Arrows-B
-    sym24       2980 ..   29FF Miscellaneous Mathematical Symbols-B
-    sym25       2A00 ..   2AFF Supplemental Mathematical Operators
-    sym26       2B00 ..   2BFF Miscellaneous Symbols and Arrows
-    glag        2C00 ..   2C5F Glagolitic
-    latnC       2C60 ..   2C7F Latin Extended-C
-    copt        2C80 ..   2CFF Coptic
-    geor1       2D00 ..   2D2F Georgian Supplement
-    tfng        2D30 ..   2D7F Tifinagh
-    ethi2       2D80 ..   2DDF Ethiopic Extended
-    cyrlA [2]   2DE0 ..   2DFF Cyrillic Extended-A
-    sym27       2E00 ..   2E7F Supplemental Punctuation
-    cjk01       2E80 ..   2EFF CJK Radicals Supplement
-    cjk02       2F00 ..   2FEF Kangxi Radicals
-    cjk03       2FF0 ..   2FFF Ideographic Description Characters
-    cjk04       3000 ..   303F CJK Symbols and Punctuation
-    hira        3040 ..   309F Hiragana
-    kana        30A0 ..   30FF Katakana
-    bopo        3100 ..   312F Bopomofo
-    hang2       3130 ..   318F Hangul Compatibility Jamo
-    cjk05       3190 ..   319F Kanbun
-    bopo1       31A0 ..   31BF Bopomofo Extended
-    cjk06       31C0 ..   31EF CJK Strokes
-    kana1       31F0 ..   31FF Katakana Phonetic Extensions
-    cjk07       3200 ..   32FF Enclosed CJK Letters and Months
-    cjk08       3300 ..   33FF CJK Compatibility
-    haniA       3400 ..   4DBF CJK Unified Ideographs Extension A
-    sym28       4DC0 ..   4DFF Yijing Hexagram Symbols
-    hani        4E00 ..   9FFF CJK Unified Ideographs
-    yiii        A000 ..   A48F Yi Syllables
-    yiii1       A490 ..   A4CF Yi Radicals
-    lisu  [2]   A4D0 ..   A4FF Lisu
-    vaii  [2]   A500 ..   A63F Vai
-    cyrlB [2]   A640 ..   A69F Cyrillic Extended-B
-    bamu  [2]   A6A0 ..   A6FF Bamum
-    sym29       A700 ..   A71F Modifier Tone Letters
-    latnD       A720 ..   A7FF Latin Extended-D
-    sylo        A800 ..   A82F Syloti Nagri
-    sym39 [2]   A830 ..   A83F Common Indic Number Forms
-    phag        A840 ..   AB7F Phags-pa
-    saur  [2]   A880 ..   A8DF Saurashtra
-    deva1 [2]   A8E0 ..   A8FF Devanagari Extended
-    kali  [2]   A900 ..   A92F Kayah Li
-    rjng  [2]   A930 ..   A95F Rejang
-    hangA [2]   A960 ..   A97F Hangul Jamo Extended-A
-    java  [2]   A980 ..   A9FF Javanese
-    cham  [2]   AA00 ..   AA5F Cham
-    mymrA [2]   AA60 ..   AA7F Myanmar Extended-A
-    tavt  [2]   AA80 ..   ABBF Tai Viet
-    mtei  [2]   ABC0 ..   ABFF Meetei Mayek
-    hang        AC00 ..   D7AF Hangul Syllables
-    hangB [2]   D7B0 ..   D7FF Hangul Jamo Extended-B
-    spc01       D800 ..   DB7F High Surrogates
-    spc02       DB80 ..   DBFF High Private Use Surrogates
-    spc03       DC00 ..   DFFF Low Surrogates
-    spc04       E000 ..   F8FF Private Use Area
-    hani1       F900 ..   FAFF CJK Compatibility Ideographs
-    latn6       FB00 ..   FB4F Alphabetic Presentation Forms
-    arab2       FB50 ..   FDFF Arabic Presentation Forms-A
-    spc05       FE00 ..   FE0F Variation Selectors
-    cjk09       FE10 ..   FE1F Vertical Forms
-    sym30       FE20 ..   FE2F Combining Half Marks
-    cjk10       FE30 ..   FE4F CJK Compatibility Forms
-    cjk11       FE50 ..   FE6F Small Form Variants
-    arab3       FE70 ..   FEFF Arabic Presentation Forms-B
-    cjk12       FF00 ..   FFEF Halfwidth and Fullwidth Forms
-    spc06       FFF0 ..   FFFF Specials                               
-    linb       10000 ..  1007F Linear B Syllabary
-    linb1      10080 ..  100FF Linear B Ideograms
-    sym31      10100 ..  1013F Aegean Numbers
-    grek2      10140 ..  1018F Ancient Greek Numbers
-    sym40 [2]  10190 ..  101CF Ancient Symbols
-    sym41 [2]  101D0 ..  1027F Phaistos Disc
-    lyci  [2]  10280 ..  1029F Lycian
-    cari  [2]  102A0 ..  102FF Carian
-    ital       10300 ..  1032F Old Italic
-    goth       10330 ..  1037F Gothic
-    ugar       10380 ..  1039F Ugaritic
-    xpeo       103A0 ..  103FF Old Persian
-    dsrt       10400 ..  1044F Deseret
-    shaw       10450 ..  1047F Shavian
-    osma       10480 ..  107FF Osmanya
-    cprt       10800 ..  1083F Cypriot Syllabary
-    armi  [2]  10840 ..  108FF Imperial Aramaic
-    phnx       10900 ..  1091F Phoenician
-    lydi  [2]  10920 ..  109FF Lydian
-    khar       10A00 ..  10A5F Kharoshthi
-    sarb  [2]  10A60 ..  10AFF Old South Arabian
-    avst  [2]  10B00 ..  10B3F Avestan
-    prti  [2]  10B40 ..  10B5F Inscriptional Parthian
-    phli  [2]  10B60 ..  10BFF Inscriptional Pahlavi
-    orkh  [2]  10C00 ..  10E5F Old Turkic
-    sym42 [2]  10E60 ..  1107F Rumi Numeral Symbols
-    kthi  [2]  11080 ..  11FFF Kaithi
-    xsux       12000 ..  123FF Cuneiform
-    xsux1      12400 ..  12FFF Cuneiform Numbers and Punctuation
-    egyp  [2]  13000 ..  1CFFF Egyptian Hieroglyphs
-    sym32      1D000 ..  1D0FF Byzantine Musical Symbols
-    sym33      1D100 ..  1D1FF Musical Symbols
-    sym34      1D200 ..  1D2FF Ancient Greek Musical Notation
-    sym35      1D300 ..  1D35F Tai Xuan Jing Symbols
-    sym36      1D360 ..  1D3FF Counting Rod Numerals
-    sym37      1D400 ..  1EFFF Mathematical Alphanumeric Symbols
-    sym43 [2]  1F000 ..  1F02F Mahjong Tiles
-    sym44 [2]  1F030 ..  1F0FF Domino Tiles
-    sym45 [2]  1F100 ..  1F1FF Enclosed Alphanumeric Supplement
-    cjk13 [2]  1F200 ..  1FFFF Enclosed Ideographic Supplement
-    haniB      20000 ..  2A6FF CJK Unified Ideographs Extension B
-    haniC [2]  2A700 ..  2F7FF CJK Unified Ideographs Extension C
-    hani2      2F800 ..  2FFFF CJK Compatibility Ideographs Supplement
-    spc07      E0000 ..  E00FF Tags
-    spc08      E0100 ..  EFFFF Variation Selectors Supplement
-    spc09      F0000 ..  FFFFF Supplementary Private Use Area-A
-    spc10     100000 .. 10FFFF Supplementary Private Use Area-B
-
-    ※ ID の命名規則
-    - Unicode ブロック名にスクリプト(用字系)の名前が含まれるものは、それ
-      に対する ISO 15924 のコードを用いた。単一のスクリプトのブロックが
-      複数ある場合は、名前が "Extended-A, B, ..." のものは A, B, ... を、
-      それ以外のものは 1, 2, ... (一部符号値順でない)を末尾に付加した。
-        "Arabic" → arab ; "Latin Extended-C" → latnC
-      なお、Hiragana は hira だが Katakana は kana であることに注意。
-    - それ以外は、CJK 関係(cjk)、特殊用途(spc)、それ以外(sym)の 3 つに
-      恣意的に分類して、2 桁の番号を付けた。この番号は基本的に符号値の
-      順とするが、後から追加されたブロックはそうならない。
-
-    CCV 2 では以下の変更がある。
-
-    - cjk12 (Halfwidth and Fullwidth Forms) が次の 3 つに分割される。
-      * cjk1b : U+FF10..U+FF19, U+FF21..U+FF3A, U+FF41..U+FF5A
-        すなわち ASCII 英数字の全角互換形。
-      * cjk1c : U+FF66..U+FF6F, U+FF71..U+FF9D
-        すなわちカタカナの半角互換形。句読点等の記号は含まない。
-      * cjk1a : cjk12 から cjk1b, cjk1c を除いた残り。
-      cjk12 の指定も使用可能である。
+\end{document}
 
 ■ 各モードでの kcatcode の値
 
@@ -548,6 +735,3 @@
     ※ upTeX の CCV が 2 でモード CCV 指定が 1 の場合は cjk1a～cjk1c の
     設定値は cjk12 のものに従う。
 
-----------------------------------------
-\end{verbatim}
-\end{document}

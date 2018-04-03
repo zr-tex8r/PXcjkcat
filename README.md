@@ -72,10 +72,25 @@ The former setting treats the "CJK-ambiguous" punctuation symbols as
 non-CJK letters, while the latter as CJK letters. Of course, your
 document must in encoded in UTF-8.
 
+### A Sample Document
+
+    % upLaTeX; UTF-8
+    \documentclass[a4paper]{article}
+    \usepackage[T1]{fontenc}
+    \usepackage[utf8]{inputenc}
+    \usepackage[prefernoncjk]{pxcjkcat}
+    \usepackage[french]{babel}
+    \begin{document}
+    \emph{Je suis un chat} (吾輩は猫である) est un roman japonais
+    écrit par Sōseki Natsume (夏目漱石) de 1905 à 1906
+    dans la revue littéraire \emph{Hototogisu} (ホトトギス).
+    \end{document}
+
 
 Revision History
 ----------------
 
+  * Version 1.1 〈2018/04/01〉
   * Version 1.0 〈2012/09/22〉
 
 --------------------
