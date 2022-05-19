@@ -499,7 +499,7 @@
 \def\cjkcategorymode#1{%
   \pxkc@letcs\pxkc@nxt{pxkc@M@@#1}%
   \ifx\pxkc@nxt\relax
-    \pxkc@err@ivmsy
+    \pxkc@err@ivmsy{#1}%
   \else
     \pxkc@warn@defunctfalse
     \pxkc@nxt
