@@ -49,6 +49,7 @@
 %% variables
 \newif\ifpxkc@ok
 \newif\ifpxkc@warn@defunct \pxkc@warn@defuncttrue
+\let\pxkc@good@mccv\relax
 \let\pxkc@mccv\relax
 \let\pxkc@ccmode@opt\relax
 \let\pxkc@arg\relax
@@ -66,15 +67,34 @@
 %--------------------------------------- package options
 
 %% mode CCV options
-\chardef\pxkc@mccv=1
 \DeclareOption{ccv1}{\chardef\pxkc@mccv=1 }
 \DeclareOption{ccv2}{\chardef\pxkc@mccv=2 }
 \DeclareOption{ccv3}{\chardef\pxkc@mccv=3 }
 \DeclareOption{ccv+}{\chardef\pxkc@mccv=0 }
+\DeclareOption{real}{\chardef\pxkc@mccv=0 }
 %% mode options
-\DeclareOption*{\edef\pxkc@ccmode@opt{\CurrentOption}}
+% NB. \[pxkc@M@@...] is later redefined.
+\def\pxkc@M@@forcecjk     {1}
+\def\pxkc@M@@prefercjk    {1}
+\def\pxkc@M@@prefercjkvar {1}
+\def\pxkc@M@@japanese     {3}
+\def\pxkc@M@@japanesevar  {3}
+\def\pxkc@M@@prefernoncjk {1}
+\def\pxkc@M@@default      {1}
+\chardef\pxkc@good@mccv=0
+\DeclareOption*{%
+  \@ifundefined{pxkc@M@@\CurrentOption}{\@unknownoptionerror}{%
+    \chardef\pxkc@good@mccv=\@nameuse{pxkc@M@@\CurrentOption}\relax
+    \edef\pxkc@ccmode@opt{\CurrentOption}}}
 %% dispatch
 \ProcessOptions\relax
+
+%% set default mode CCV (ccv1)
+\ifx\pxkc@mccv\relax
+  \chardef\pxkc@mccv=1
+\else
+  \chardef\pxkc@good@mccv=0 % disable check
+\fi
 
 %--------------------------------------- environment check
 
@@ -117,6 +137,17 @@
   \chardef\pxkc@ccv=\bxDebugCcv\relax
 \fi
 \pxkc@debug{CJK category version \number\pxkc@ccv}
+
+%% Here show warning for mode CCV recommendation.
+%% (No warning if the good mode CCV is unavailable.)
+\ifnum\pxkc@good@mccv>\pxkc@mccv \ifnum\pxkc@good@mccv>\pxkc@ccv\else
+  \PackageWarningNoLine\pxkc@pkgname
+   {Mode CCV \number\pxkc@good@mccv\space
+      (option 'ccv\number\pxkc@good@mccv') is recommended\MessageBreak
+    for the use of category mode '\pxkc@ccmode@opt'!\MessageBreak
+    Or you can simply suppress this warning by giving\MessageBreak
+    option 'ccv\number\pxkc@mccv' explicitly}
+\fi\fi
 
 %% set mode CCV if 'ccv+' is given
 \ifnum\pxkc@mccv=\z@
