@@ -42,18 +42,6 @@
 \def\pxkc@debug#1{\typeout{**[\pxkc@pkgname] #1}}
 \fi
 
-%% environment check
-\@tempswafalse
-\ifx\ucs\@undefined\else \ifnum\ucs"3000="3000
-    \@tempswatrue
-\fi\fi
-\if@tempswa\else
-  \PackageError\pxkc@pkgname
-   {Native upTeX is required}%
-   {Package loading is aborted.\MessageBreak
-    \@ehc}
-\expandafter\endinput\fi\relax
-
 %% unique tokens
 \def\pxkc@end{\pxkc@end@}
 \let\pxkc@mk\indent
@@ -89,6 +77,21 @@
 \ProcessOptions\relax
 
 %--------------------------------------- environment check
+
+%% check engine
+\def\pxkc@tmpa{Native upTeX is required}
+\ifx\ucs\@undefined\else \ifnum\ucs"3000="3000
+  \ifx\forcecjktoken\@undefined
+    \def\pxkc@tmpa{This upTeX is too old}
+  \else \let\pxkc@tmpa\relax
+  \fi
+\fi\fi
+\ifx\pxkc@tmpa\relax\else
+  \PackageError\pxkc@pkgname
+   {\pxkc@tmpa}%
+   {Package loading is aborted.\MessageBreak
+    \@ehc}
+\expandafter\endinput\fi\relax
 
 %%-------- classification version check
 
