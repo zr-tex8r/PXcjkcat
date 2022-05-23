@@ -81,6 +81,7 @@
 \def\pxkc@M@@japanesevar  {3}
 \def\pxkc@M@@prefernoncjk {1}
 \def\pxkc@M@@default      {1}
+\def\pxkc@M@@nomode       {0}% special
 \chardef\pxkc@good@mccv=0
 \DeclareOption*{%
   \@ifundefined{pxkc@M@@\CurrentOption}{\@unknownoptionerror}{%
@@ -88,6 +89,12 @@
     \edef\pxkc@ccmode@opt{\CurrentOption}}}
 %% dispatch
 \ProcessOptions\relax
+
+%% clear up
+\ifnum\pxkc@good@mccv=0
+  \let\pxkc@ccmode@opt\relax
+\fi
+\let\pxkc@M@@nomode\@undefined
 
 %% set default mode CCV (ccv1)
 \ifx\pxkc@mccv\relax
