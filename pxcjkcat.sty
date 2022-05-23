@@ -779,6 +779,8 @@
 %% variables
 \let\pxkc@ctmode\relax
 
+\ifx\currentcjktoken\@undefined         %<*!e-pTeX>
+
 %% \pxkc@make@probe
 \def\pxkc@make@probe{%
   \edef\pxkc@tmpa{\expandafter\string\csname
@@ -797,16 +799,33 @@
     \ifx\pxkc@tmpa\pxkc@prb@d \global\chardef\pxkc@gtmpa\z@
     \else\ifx\pxkc@tmpa\pxkc@prb@e \global\chardef\pxkc@gtmpa\@ne
     \else\ifx\pxkc@tmpa\pxkc@prb@f \global\chardef\pxkc@gtmpa\tw@
-    \else \global\let\pxkc@gtmpa\m@ne
+    \else \global\chardef\pxkc@gtmpa\@cclv
     \fi\fi\fi
   \endgroup
   \let#1\pxkc@gtmpa}
+
+% The method does not work on new upTeX, but running LaTeX
+% on new upTeX without e-TeX is highly improbable....
+\ifx\pxkc@prb@d\pxkc@prb@e
+  \def\pxkc@get@cjktoken@mode#1{%
+    \chardef#1\@cclv} % always fail
+\fi
+
+\else                                   %<*e-pTeX>
+
+\def\pxkc@get@cjktoken@mode#1{%
+  \chardef#1\ifcase\currentcjktoken
+    \@ne \or \z@ \or \tw@ \or \@cclv
+  \fi}
+
+\fi                                     %</e-pTeX>
 
 %%<*> \getcjktokenmode
 % Returns the value showing current mode to \thecjktokenmode
 %  0: \disablecjktoken
 %  1: \enablecjktoken
 %  2: \forcecjktoken
+%  255: failure
 \newcommand*\getcjktokenmode{%
   \pxkc@get@cjktoken@mode\thecjktokenmode}
 
@@ -832,11 +851,17 @@
   \pxkc@with@cjktoken@mode\forcecjktoken}
 \def\pxkc@with@cjktoken@mode#1{%
   \pxkc@get@cjktoken@mode\pxkc@ctmode
+  \ifnum\pxkc@ctmode=\@cclv \pxkc@with@cjktoken@mode@b \fi
   #1%
   \pxkc@with@cjktoken@mode@a}
 \def\pxkc@with@cjktoken@mode@a#1#2{%
   #1{#2}%
   \setcjktokenmode\pxkc@ctmode}
+\def\pxkc@with@cjktoken@mode@b{%
+  \global\let\pxkc@with@cjktoken@mode@b\relax
+  \PackageWarning\pxkc@pkgname
+   {Failed in getting current cjktoken mode,\MessageBreak
+    reported}}
 
 %--------------------------------------- initial setup
 
