@@ -1,20 +1,26 @@
 % upLaTeX 文書; 文字コードは UTF-8
 \documentclass[uplatex,dvipdfmx,a4paper]{jsarticle}
+\renewcommand{\headfont}{\gtfamily\romanseries{sbc}\sffamily}
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \usepackage{geometry}
 \usepackage{xcolor}
 \usepackage[colorlinks,hyperfootnotes=false]{hyperref}
 \usepackage{pxjahyper}
-\hypersetup{linkcolor=blue!75!black,urlcolor=green!45!black}
+\hypersetup{linkcolor=blue!75!black,urlcolor=green!45!black,
+  pdftitle={pxcjkcatパッケージ},
+  pdfauthor={八登崇之}}
+\usepackage{bxtexlogo}
+\bxtexlogoimport{*}
+\usepackage[verb]{bxghost}
 \usepackage{shortvrb}
 \MakeShortVerb{\|}
 \usepackage{verbatim}
 \newenvironment{myverbatim}
   {\quote\small\verbatim}
   {\endverbatim\endquote}
-\newcommand{\PkgVersion}{1.1}
-\newcommand{\PkgDate}{2018/04/01}
+\newcommand{\PkgVersion}{1.2}
+\newcommand{\PkgDate}{2025/05/25}
 \newcommand{\Pkg}[1]{\textsf{#1}}
 \newcommand{\Meta}[1]{$\langle$\mbox{}#1\mbox{}$\rangle$}
 \newcommand{\Note}{\par\noindent ※}
@@ -22,10 +28,6 @@
 \newcommand{\strong}{\textsf}
 \newcommand{\wbr}{\linebreak[0]}
 \newcommand{\Code}[1]{{\usefont{T1}{lmtt}{l}{n}#1}}
-\providecommand{\pTeX}{p\TeX}
-\providecommand{\upTeX}{u\pTeX}
-\providecommand{\pLaTeX}{p\LaTeX}
-\providecommand{\upLaTeX}{u\pLaTeX}
 %-----------------------------------------------------------
 \begin{document}
 \title{\Pkg{pxcjkcat} パッケージ}
@@ -52,19 +54,30 @@
 オプションとして以下のものが指定できる。
 
 \begin{itemize}
-\item |ccv1|\Means
-  「モードCCV」を1（{\upTeX} v0.11～0.28と互換）とする。
-\item |ccv2|\Means
-  「モードCCV」を2（{\upTeX} v0.29～1.22と互換）とする。
-\item |ccv3|\Means
-  「モードCCV」を3（{\upTeX} v1.23以降と互換）とする。
-\item |ccv+|\Means
-  「モードCCV」をエンジンの実のCCVと一致させる。
-  \Note 「モードCCV」については\ref{sec:CCV}節を参照。
-\item |\cjkcategorymode| \strong{命令で有効なモード値}\Means
+\item \strong{モードCCV指定}\Means
+  \<「モードCCV」の値を指定するオプション。
+  \Note モードCCVについては\ref{sec:CCV}節を参照。
+  \Note モードCCVの既定値は1であり、
+  これは極めて古い版と互換にすることを意味する。
+  モード設定（|prefernoncjk|等）を利用する場合には、
+  適切なモードCCVのオプションを指定するのが望ましい。
+  \begin{itemize}
+  \item |ccv1|\Means
+    モードCCVを1（{\upTeX} v0.11～0.28と互換）とする。
+    \strong{既定値。}
+  \item |ccv2|\Means
+    モードCCVを2（{\upTeX} v0.29～1.22と互換）とする。
+  \item |ccv3|\Means
+    モードCCVを3（{\upTeX} v1.23以降と互換）とする。
+  \item |real|または|ccv+|\Means
+    モードCCVをエンジンの実のCCVと一致させる。
+  \end{itemize}
+\item |\cjkcategorymode|\strong{命令で有効なモード値}\Means
   和文カテゴリがモードに従って設定される。
   \Note モード値オプションが非指定の場合は、パッケージ読込時に
   和文カテゴリが変更されることはない。
+\item |nomode|\Means
+  モード値オプションの効果を打ち消す。
 \end{itemize}
 
 %===========================================================
@@ -82,6 +95,8 @@
   %\item ブロック名
   \item 非ASCII文字1つ\Means
     その文字の属するブロックを指す。
+    \Note 文字による指定は「{\upTeX}の版によるブロック分割の差異」に
+      影響されることに注意。
   %\item 整数値\Means
   %  その符号位置の属するブロックを指す。
   \end{itemize}
@@ -98,6 +113,7 @@
   \end{itemize}
 
   和文カテゴリの変更は局所的（グルーピングに従う）である。
+  \Note モードCCVの指定は|\cjkcategory|の動作には影響を与えない。
 
 \item |\cjkcategorymode{|\Meta{モード}|}|\Means
   全てのブロックの和文カテゴリの一括設定（モード設定）を行う。
@@ -108,15 +124,17 @@
   \begin{itemize}
   \item |forcecjk|\Means
     ASCII文字のみ欧文扱いで他のブロックは全て和文扱い
-    （|noncjk| 以外）とする。
+    （|noncjk|以外）とする。
     和文フォントの中のUnicode値の割当がある全ての文字を
     和文文字として直接用いることができる。
   \item |default|\Means
     指定のモードCCVにおける既定の設定と一致させる。
-    \Note モードCCVが2以下の場合は |forcecjk| と同一の設定になる。
-    \Note モードCCVがエンジンの実のCCVと一致する場合
-      （|ccv+| オプション指定の場合を含む）は、
-      エンジンの既定の設定と一致する。
+    \Note モードCCVが2以下の場合は|forcecjk|と同一の設定になる。
+    %\Note モードCCVがエンジンの実のCCVと一致する場合は、
+    %  エンジンの既定の設定と一致する。
+    \Note モードCCVが3の場合の\strong{仕様は未確定}である。
+      現状の動作は「v1.23の既定設定と一致させる」となっているが、
+      この動作は\strong{将来変更される可能性がある}。
   \item |prefercjk|\Means
     和文扱いのブロックとして、「CJK中核セット」のものに加えて、
     「Adobeの定めるCJK文字集合
@@ -124,7 +142,7 @@
     の何れかと共通部分をもつ文字ブロック」を加えて、
     残りを欧文扱いに設定する。
   \item |prefercjkvar|\Means
-    |prefercjk| において、ギリシャ・キリル文字の
+    |prefercjk|において、ギリシャ・キリル文字の
     ブロックを欧文扱いに変更したもの。
   \item |japanese|\Means
     和文扱いのブロックとして、「CJK中核セット」のものに加えて、
@@ -132,7 +150,7 @@
     の何れかと共通部分をもつ文字ブロック」を加えて、
     残りを欧文扱いに設定する。
   \item |japanesevar|\Means
-    |japanese| において、ギリシャ・キリル文字の
+    |japanese|において、ギリシャ・キリル文字の
     ブロックを欧文扱いに変更したもの。
   \item |prefernoncjk|\Means
     「CJK中核セット」のブロックのみを和文扱いとし、
@@ -141,13 +159,13 @@
 
   ここで「CJK中核セット」の内容は以下のとおりである。
     \begin{itemize}
-    \item 漢字・部首・注音字母\Means |kanji| に設定。
-    \item ひらがな・カタカナ\Means |kana| に設定。
+    \item 漢字・部首・注音字母\Means |kanji|に設定。
+    \item ひらがな・カタカナ\Means |kana|に設定。
     \item CJK記号の一部・全角半角互換形・彝文字
-      ・西夏文字・女書文字\Means |cjk| に設定
-      \footnote{モードCCVが2の場合、|cjk12| の再分割の
-        中の |cjk1b|、|cjk1c| は |kana| に変更される。}。
-    \item ハングル完成形・ハングル字母\Means |hangul| に設定。
+      ・西夏文字・女書文字・契丹文字\Means |cjk|に設定。
+      \Note モードCCVが2以上の場合、|cjk12|の再分割の|cjk1b|、
+        |cjk1c|は|kana|に設定される。
+    \item ハングル完成形・ハングル字母\Means |hangul|に設定。
   \end{itemize}
   \Note 各モードでの具体的な設定値については\ref{sec:Values}節を参照。
 
@@ -156,6 +174,14 @@
 %===========================================================
 \section{文字分類バージョン（CCV）}
 \label{sec:CCV}
+
+\noindent \strong{注意}\Means
+この節に述べられている説明は現状の仕様と食い違っている部分があり、
+大幅な改訂が必要な状態である。
+現状の仕様では、モードCCVの影響を受けるのはモード設定の定義のみであり、
+ブロック分割は常に実際のエンジンのものに一致させている。
+
+\bigskip
 
 {\upTeX}エンジンでの文字ブロックの分割および各ブロックの
 和文カテゴリの既定値は改版時に変更され、
@@ -236,18 +262,19 @@
 \subsection{Unicodeブロックの一覧}
 
 以下は、Unicodeが定めるブロックと直接に対応するブロックの一覧である。
-この表の「ブロックID」の欄が、|\cjkcategory| 命令で指定する
+この表の「ブロックID」の欄が、|\cjkcategory|命令で指定する
 ブロックIDを示す。
-「CCV」の欄は、そのブロックがサポートされるモードCCVの
+「CCV」の欄は、そのブロックがサポートされる実CCVの
 範囲の下限を表す。
-\footnote{ここで示すサポート範囲は「必要条件」であることに注意。
-  先述の通り、エンジンの改版でブロックが（分割変更でなく）
-  新規追加された場合には以前のCCVの値を引き継ぐ。
-  このため、サポート範囲が「2」のブロックは、
-  モードCCVが2であっても“実際には使えない”可能性がある。
-  （モードCCVが3以上なら必ず使えて、1なら必ず使えない。）
-  “実際には使えない”ブロックに設定を試みた場合は、
-  警告が出て設定が無視される。}
+\footnote{これは参考情報であり、現状の仕様ではあまり意味をもたない。}
+%\footnote{ここで示すサポート範囲は「必要条件」であることに注意。
+%  先述の通り、エンジンの改版でブロックが（分割変更でなく）
+%  新規追加された場合には以前のCCVの値を引き継ぐ。
+%  このため、サポート範囲が「2」のブロックは、
+%  モードCCVが2であっても“実際には使えない”可能性がある。
+%  （モードCCVが3以上なら必ず使えて、1なら必ず使えない。）
+%  “実際には使えない”ブロックに設定を試みた場合は、
+%  警告が出て設定が無視される。}
 
 \begin{quote}
 \renewcommand{\baselinestretch}{0.9}\small
@@ -258,9 +285,8 @@
     ~～~\makebox[3em][r]{\Code{#2}}\hspace*{1em}\ignorespaces}
 \newcommand*\xN[1]{#1}
 \hspace*{-1em}%header-line
-\makebox[5em][l]{ブロック\mbox{}ID}\makebox[2em][c]{CCV}%
+\makebox[5em][l]{ブロック\mbox{}ID}\makebox[2em][c]{~~CCV}%
 \makebox[10em][c]{符号値範囲}\makebox{ブロック名称}\par
-\xI{latn}  \xV{1} \xR  {0000}  {007F} \xN{Basic Latin}\par
 %/////////////////////////////
 \xI{latn}  \xV{1} \xR  {0000}  {007F} \xN{Basic Latin}\par
 \xI{latn1} \xV{1} \xR  {0080}  {00FF} \xN{Latin-1 Supplement}\par
@@ -325,6 +351,7 @@
 \xI{lepc}  \xV{2} \xR  {1C00}  {1C4F} \xN{Lepcha}\par
 \xI{olck}  \xV{2} \xR  {1C50}  {1C7F} \xN{Ol Chiki}\par
 \xI{cyrlC} \xV{2} \xR  {1C80}  {1C8F} \xN{Cyrillic Extended-C}\par
+\xI{geor2} \xV{3} \xR  {1C90}  {1CBF} \xN{Georgian Extended}\par
 \xI{sund1} \xV{2} \xR  {1CC0}  {1CCF} \xN{Sundanese Supplement}\par
 \xI{sym38} \xV{2} \xR  {1CD0}  {1CFF} \xN{Vedic Extensions}\par
 \xI{latn4} \xV{1} \xR  {1D00}  {1D7F} \xN{Phonetic Extensions}\par
@@ -464,7 +491,13 @@
 \xI{phlp}  \xV{2} \xR {10B80} {10BAF} \xN{Psalter Pahlavi}\par
 \xI{orkh}  \xV{2} \xR {10C00} {10C4F} \xN{Old Turkic}\par
 \xI{hung}  \xV{2} \xR {10C80} {10CFF} \xN{Old Hungarian}\par
+\xI{rohg}  \xV{3} \xR {10D00} {10D3F} \xN{Hanifi Rohingya}\par
 \xI{sym42} \xV{2} \xR {10E60} {10E7F} \xN{Rumi Numeral Symbols}\par
+\xI{yezi}  \xV{3} \xR {10E80} {10EBF} \xN{Yezidi}\par
+\xI{sogo}  \xV{3} \xR {10F00} {10F2F} \xN{Old Sogdian}\par
+\xI{sogd}  \xV{3} \xR {10F30} {10F6F} \xN{Sogdian}\par
+\xI{chrs}  \xV{3} \xR {10FB0} {10FDF} \xN{Chorasmian}\par
+\xI{elym}  \xV{3} \xR {10FE0} {10FFF} \xN{Elymaic}\par
 \xI{brah}  \xV{2} \xR {11000} {1107F} \xN{Brahmi}\par
 \xI{kthi}  \xV{2} \xR {11080} {110CF} \xN{Kaithi}\par
 \xI{sora}  \xV{2} \xR {110D0} {110FF} \xN{Sora Sompeng}\par
@@ -482,42 +515,59 @@
 \xI{modi}  \xV{2} \xR {11600} {1165F} \xN{Modi}\par
 \xI{mong1} \xV{2} \xR {11660} {1167F} \xN{Mongolian Supplement}\par
 \xI{takr}  \xV{2} \xR {11680} {116CF} \xN{Takri}\par
-\xI{ahom}  \xV{2} \xR {11700} {1173F} \xN{Ahom}\par
+\xI{ahom}  \xV{2} \xR {11700} {1174F} \xN{Ahom}\par
+\xI{dogr}  \xV{3} \xR {11800} {1184F} \xN{Dogra}\par
 \xI{wara}  \xV{2} \xR {118A0} {118FF} \xN{Warang Citi}\par
+\xI{diak}  \xV{3} \xR {11900} {1195F} \xN{Dives Akuru}\par
+\xI{nand}  \xV{3} \xR {119A0} {119FF} \xN{Nandinagari}\par
 \xI{zanb}  \xV{3} \xR {11A00} {11A4F} \xN{Zanabazar Square}\par
 \xI{soyo}  \xV{3} \xR {11A50} {11AAF} \xN{Soyombo}\par
 \xI{pauc}  \xV{2} \xR {11AC0} {11AFF} \xN{Pau Cin Hau}\par
 \xI{bhks}  \xV{2} \xR {11C00} {11C6F} \xN{Bhaiksuki}\par
 \xI{marc}  \xV{2} \xR {11C70} {11CBF} \xN{Marchen}\par
 \xI{gonm}  \xV{3} \xR {11D00} {11D5F} \xN{Masaram Gondi}\par
+\xI{gong}  \xV{3} \xR {11D60} {11DAF} \xN{Gunjala Gondi}\par
+\xI{maka}  \xV{3} \xR {11EE0} {11EFF} \xN{Makasar}\par
+\xI{lisu1} \xV{3} \xR {11FB0} {11FBF} \xN{Lisu Supplement}\par
+\xI{taml1} \xV{3} \xR {11FC0} {11FFF} \xN{Tamil Supplement}\par
 \xI{xsux}  \xV{1} \xR {12000} {123FF} \xN{Cuneiform}\par
 \xI{xsux1} \xV{1} \xR {12400} {1247F} \xN{Cuneiform Numbers and Punctuation}\par
 \xI{xsux2} \xV{2} \xR {12480} {1254F} \xN{Early Dynastic Cuneiform}\par
 \xI{egyp}  \xV{2} \xR {13000} {1342F} \xN{Egyptian Hieroglyphs}\par
+\xI{egyp1} \xV{3} \xR {13430} {1343F} \xN{Egyptian Hieroglyph Format Controls}\par
 \xI{hluw}  \xV{2} \xR {14400} {1467F} \xN{Anatolian Hieroglyphs}\par
 \xI{bamu1} \xV{2} \xR {16800} {16A3F} \xN{Bamum Supplement}\par
 \xI{mroo}  \xV{2} \xR {16A40} {16A6F} \xN{Mro}\par
 \xI{bass}  \xV{2} \xR {16AD0} {16AFF} \xN{Bassa Vah}\par
 \xI{hmng}  \xV{2} \xR {16B00} {16B8F} \xN{Pahawh Hmong}\par
+\xI{medf}  \xV{3} \xR {16E40} {16E9F} \xN{Medefaidrin}\par
 \xI{plrd}  \xV{2} \xR {16F00} {16F9F} \xN{Miao}\par
 \xI{cjk14} \xV{2} \xR {16FE0} {16FFF} \xN{Ideographic Symbols and Punctuation}\par
 \xI{tang}  \xV{2} \xR {17000} {187FF} \xN{Tangut}\par
 \xI{tang1} \xV{2} \xR {18800} {18AFF} \xN{Tangut Components}\par
+\xI{kits}  \xV{3} \xR {18B00} {18CFF} \xN{Khitan Small Script}\par
+\xI{tang2} \xV{3} \xR {18D00} {18D7F} \xN{Tangut Supplement}\par
 \xI{kana2} \xV{2} \xR {1B000} {1B0FF} \xN{Kana Supplement}\par
 \xI{kanaA} \xV{3} \xR {1B100} {1B12F} \xN{Kana Extended-A}\par
+\xI{kana3} \xV{3} \xR {1B130} {1B16F} \xN{Small Kana Extension}\par
 \xI{nshu}  \xV{3} \xR {1B170} {1B2FF} \xN{Nushu}\par
 \xI{dupl}  \xV{2} \xR {1BC00} {1BC9F} \xN{Duployan}\par
 \xI{sym53} \xV{2} \xR {1BCA0} {1BCAF} \xN{Shorthand Format Controls}\par
 \xI{sym32} \xV{1} \xR {1D000} {1D0FF} \xN{Byzantine Musical Symbols}\par
 \xI{sym33} \xV{1} \xR {1D100} {1D1FF} \xN{Musical Symbols}\par
 \xI{sym34} \xV{1} \xR {1D200} {1D24F} \xN{Ancient Greek Musical Notation}\par
+\xI{sym58} \xV{3} \xR {1D2E0} {1D2FF} \xN{Mayan Numerals}\par
 \xI{sym35} \xV{1} \xR {1D300} {1D35F} \xN{Tai Xuan Jing Symbols}\par
 \xI{sym36} \xV{1} \xR {1D360} {1D37F} \xN{Counting Rod Numerals}\par
 \xI{sym37} \xV{1} \xR {1D400} {1D7FF} \xN{Mathematical Alphanumeric Symbols}\par
 \xI{sgnw}  \xV{2} \xR {1D800} {1DAAF} \xN{Sutton SignWriting}\par
 \xI{glag1} \xV{2} \xR {1E000} {1E02F} \xN{Glagolitic Supplement}\par
+\xI{hmnp}  \xV{3} \xR {1E100} {1E14F} \xN{Nyiakeng Puachue Hmong}\par
+\xI{wcho}  \xV{3} \xR {1E2C0} {1E2FF} \xN{Wancho}\par
 \xI{mend}  \xV{2} \xR {1E800} {1E8DF} \xN{Mende Kikakui}\par
 \xI{adlm}  \xV{2} \xR {1E900} {1E95F} \xN{Adlam}\par
+\xI{sym59} \xV{3} \xR {1EC70} {1ECBF} \xN{Indic Siyaq Numbers}\par
+\xI{sym61} \xV{3} \xR {1ED00} {1ED4F} \xN{Ottoman Siyaq Numbers}\par
 \xI{sym51} \xV{2} \xR {1EE00} {1EEFF} \xN{Arabic Mathematical Alphabetic Symbols}\par
 \xI{sym43} \xV{2} \xR {1F000} {1F02F} \xN{Mahjong Tiles}\par
 \xI{sym44} \xV{2} \xR {1F030} {1F09F} \xN{Domino Tiles}\par
@@ -532,12 +582,16 @@
 \xI{sym55} \xV{2} \xR {1F780} {1F7FF} \xN{Geometric Shapes Extended}\par
 \xI{sym56} \xV{2} \xR {1F800} {1F8FF} \xN{Supplemental Arrows-C}\par
 \xI{sym57} \xV{2} \xR {1F900} {1F9FF} \xN{Supplemental Symbols and Pictographs}\par
+\xI{sym60} \xV{3} \xR {1FA00} {1FA6F} \xN{Chess Symbols}\par
+\xI{sym62} \xV{3} \xR {1FA70} {1FAFF} \xN{Symbols and Pictographs Extended-A}\par
+\xI{sym63} \xV{3} \xR {1FB00} {1FBFF} \xN{Symbols for Legacy Computing}\par
 \xI{haniB} \xV{1} \xR {20000} {2A6DF} \xN{CJK Unified Ideographs Extension B}\par
 \xI{haniC} \xV{2} \xR {2A700} {2B73F} \xN{CJK Unified Ideographs Extension C}\par
 \xI{haniD} \xV{2} \xR {2B740} {2B81F} \xN{CJK Unified Ideographs Extension D}\par
 \xI{haniE} \xV{2} \xR {2B820} {2CEAF} \xN{CJK Unified Ideographs Extension E}\par
 \xI{haniF} \xV{3} \xR {2CEB0} {2EBEF} \xN{CJK Unified Ideographs Extension F}\par
 \xI{hani2} \xV{1} \xR {2F800} {2FA1F} \xN{CJK Compatibility Ideographs Supplement}\par
+\xI{haniG} \xV{3} \xR {30000} {3134F} \xN{CJK Unified Ideographs Extension G}\par
 \xI{spc07} \xV{1} \xR {E0000} {E007F} \xN{Tags}\par
 \xI{spc08} \xV{1} \xR {E0100} {E01EF} \xN{Variation Selectors Supplement}\par
 \xI{spc09} \xV{1} \xR {F0000} {FFFFF} \xN{Supplementary Private Use Area-A}\par
@@ -575,7 +629,7 @@ CCV~1ではUnicodeブロックの再分割が存在しないので、
 サポートされるブロックの全体は以下のようになる。
 
 \begin{itemize}
-\item 前掲の通常ブロックの表で「CCV」欄が「1」の
+\item 前掲の通常ブロックの表で「CCV」欄が1の
   ブロック全て。
 \end{itemize}
 
@@ -633,7 +687,7 @@ CCV~3では |latn1|“Latin-1 Supplement”のブロックが
 従って、サポートされるブロックの全体は以下のようになる。
 
 \begin{itemize}
-\item 前掲の通常ブロックの表で「CCV」欄が2以下のブロック全て。
+\item 前掲の通常ブロックの表にあるブロック全て。
   \Note |cjk12|、|latn1| のブロックも使用可能。
 \item |cjk12| の下位ブロック\Means
   |cjk1a|、|cjk1b|、|cjk1c| の3つ。
@@ -645,7 +699,7 @@ CCV~3では |latn1|“Latin-1 Supplement”のブロックが
 \section{各モードにおける和文カテゴリの設定}
 \label{sec:Values}
 
-（あとで書く）
+（やっぱりあとで書く）
 
 \end{document}
 
