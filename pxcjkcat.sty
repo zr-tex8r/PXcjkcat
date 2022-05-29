@@ -64,6 +64,10 @@
   \PackageError\pxkc@pkgname
    {Invalid name (#1) for cjk-category mode}%
    {\@eha}}
+\def\pxkc@err@naltn{%
+  \PackageError\pxkc@pkgname
+   {Change to cjk-category of 'latn' is forbidden}%
+   {\@eha}}
 \def\pxkc@warn@dfblk#1{%
   \PackageWarning\pxkc@pkgname
    {Unsupported Unicode block '#1' is\MessageBreak
@@ -263,10 +267,12 @@
     \ifpxkc@ok % bad
       \@namedef{pxkc@B@@#2}{-1}%
       \edef\pxkc@bbslst{\pxkc@bbslst\space#2}%
+    \else\ifnum#3=\z@ % 'latn'
+      \@namedef{pxkc@B@@#2}{0}%
     \else
       \@namedef{pxkc@B@@#2}{#3}%
       \edef\pxkc@bslst{\pxkc@bslst,#2}%
-    \fi
+    \fi\fi
   \fi}
 %% \pxkc@gval{<gblock>}{<block>,...}{<full_name>}
 \def\pxkc@gval#1#2#3{\@namedef{pxkc@G@@#1}{#2}}
@@ -661,9 +667,13 @@
       \pxkc@err@ivbsy{\pxkc@blk}%
     \else\ifnum\pxkc@cp<\z@ % bad
       \ifpxkc@warn@bad \pxkc@warn@dfblk{\pxkc@blk}\fi
+    \else\ifnum\pxkc@cp=\z@
+      \ifnum\pxkc@arg=15 \else
+        \pxkc@err@naltn
+      \fi
     \else
       \pxkc@kcatcode{\pxkc@cp}{\pxkc@arg}%
-    \fi\fi
+    \fi\fi\fi
   \else
     \pxkc@expanded{\noexpand\pxkc@cjkcategory@a{\pxkc@tmpa}}%
   \fi}
@@ -694,6 +704,7 @@
     \pxkc@warn@badfalse
     \pxkc@next
     \pxkc@warn@badtrue
+    \kcatcode0=15 % 'latn' is fixed
   \fi}
 
 %--------------------------------------- CJK category modes
@@ -755,6 +766,10 @@
 \do{hani2} {16} % CJK Compatibility Ideographs Supplement
 \do{haniG} {16} % CJK Unified Ideographs Extension G
 %=======================================
+\ifnum\pxkc@mccv<2
+  \do{cjk1b} {18}
+  \do{cjk1c} {18}
+\fi
 
 %% \pxkc@reset@all{<kcatcode>}
 \def\pxkc@reset@all#1{%
@@ -762,10 +777,7 @@
   \pxkc@foreach@blocks\do{%
     \pxkc@letcs\pxkc@cat{pxkc@K@@\pxkc@blk}%
     \ifx\pxkc@cat\relax \let\pxkc@cat\pxkc@base@cat \fi
-    \pxkc@kcatcode{\@nameuse{pxkc@B@@\pxkc@blk}}{\pxkc@cat}}%
-  \ifnum\pxkc@mccv<2
-    \pxkc@cjkcategory{cjk12}{18}%
-  \fi}
+    \pxkc@kcatcode{\@nameuse{pxkc@B@@\pxkc@blk}}{\pxkc@cat}}}
 
 %% \[pxkc@M@@<mode>] : the implementation of a mode
 %P======================================
