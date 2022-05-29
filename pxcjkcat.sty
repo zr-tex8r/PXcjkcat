@@ -13,6 +13,40 @@
 \ProvidesPackage{pxcjkcat}[2022/05/25 v1.2 PX cjk-category mode]
 \def\pxkc@pkgname{pxcjkcat}
 
+%% code guards
+\edef\pxkc@restore@codes{%
+\catcode33=\the\catcode33%
+\catcode34=\the\catcode34%
+\catcode39=\the\catcode39%
+\catcode43=\the\catcode43%
+\catcode45=\the\catcode45%
+\catcode46=\the\catcode46%
+\catcode47=\the\catcode47%
+\catcode58=\the\catcode58%
+\catcode60=\the\catcode60%
+\catcode62=\the\catcode62%
+\catcode63=\the\catcode63%
+\catcode94=\the\catcode94%
+\catcode96=\the\catcode96%
+\endlinechar=\the\endlinechar%
+\relax}%
+\catcode33=12 % <!>
+\catcode34=12 % <">
+\catcode39=12 % <'>
+\catcode43=12 % <+>
+\catcode45=12 % <->
+\catcode46=12 % <.>
+\catcode47=12 % </>
+\catcode58=12 % <:>
+\catcode60=12 % <<>
+\catcode62=12 % <>>
+\catcode63=12 % <?>
+\catcode94=7 % <^>
+\catcode96=12 % <`>
+\AtEndOfPackage{%
+\pxkc@restore@codes
+\let\pxkc@restore@codes\relax}
+
 %--------------------------------------- general
 
 %% error messages
@@ -32,7 +66,7 @@
    {\@eha}}
 \def\pxkc@warn@dfblk#1{%
   \PackageWarning\pxkc@pkgname
-   {Defunct Unicode block '#1' is\MessageBreak
+   {Unsupported Unicode block '#1' is\MessageBreak
     specified}}
 
 %% \pxkc@debug{<message>}
@@ -48,7 +82,7 @@
 
 %% variables
 \newif\ifpxkc@ok
-\newif\ifpxkc@warn@defunct \pxkc@warn@defuncttrue
+\newif\ifpxkc@warn@bad \pxkc@warn@badtrue
 \let\pxkc@good@mccv\relax
 \let\pxkc@mccv\relax
 \let\pxkc@ccmode@opt\relax
@@ -172,7 +206,7 @@
   \let\pxkc@mccv\pxkc@ccv
 \fi
 
-%% \pxkc@kcatcode
+%% \pxkc@kcatcode{<charcode>}{<kcatcode>}
 \ifx\bxUseDebug\@undefined
 \def\pxkc@kcatcode#1#2{\kcatcode#1=#2\relax}
 \else
@@ -187,13 +221,13 @@
 %--------------------------------------- data tables
 
 %% variables
-%\[pxkc@B@@<block>] : start codepoint of the block
+%\[pxkc@B@@<block>] : start charcode of the block
 %\[pxkc@G@@<block>] : members of the group block
 %\[pxkc@C@@<category>] : kcatcode value of the category
 
 %% \pxkc@bslst
 \def\pxkc@bslst{\@gobble}
-%% \pxkc@bval{<min_ccv>}{<block>}{<ucs>}{<full_name>}
+%% \pxkc@bval{<min_ccv>}{<block>}{<charcode>}{<full_name>}
 \def\pxkc@bval#1#2#3#4{% #4 is unused for now
   \ifnum#1>\pxkc@ccv\else
     \ifnum#1<\tw@ \pxkc@okfalse
@@ -202,8 +236,8 @@
       \@tempcntb\@tempcnta \advance\@tempcntb\m@ne
       \pxkc@is@same@block\@tempcnta\@tempcntb
     \fi
-    \ifpxkc@ok \pxkc@debug{defunct: #2}%
-      \@namedef{pxkc@B@@#2}{-1}% defunct
+    \ifpxkc@ok \pxkc@debug{bad: #2}%
+      \@namedef{pxkc@B@@#2}{-1}% bad
     \else
       \@namedef{pxkc@B@@#2}{#3}%
       \edef\pxkc@bslst{\pxkc@bslst,#2}%
@@ -212,7 +246,7 @@
 %% \pxkc@gval{<gblock>}{<block>,...}{<full_name>}
 \def\pxkc@gval#1#2#3{\@namedef{pxkc@G@@#1}{#2}}
 
-%% \pxkc@cval{<category>}{<value>}
+%% \pxkc@cval{<category>}{<kcatcode>}
 \def\pxkc@cval#1#2{\@namedef{pxkc@C@@#1}{#2}}
 \pxkc@cval{noncjk}{15}
 \pxkc@cval{kanji}{16}
@@ -560,8 +594,8 @@
 %%<*> \cjkcategory{<block>}{<category>}
 % Sets the kcatcode of block <block> to <category>.
 % Here <block> is given as a block name or a single character in the
-% block to be specified; <category> is given as a category name or
-% a number ranged in 15--19.
+% block (groups are not considered) to be specified;
+% <category> is given as a category name or a kcatcode value (15--19).
 \newcommand*\cjkcategory{%
   \begingroup
     \forcecjktoken
@@ -582,22 +616,22 @@
     \expandafter\pxkc@cjkcategory@b\expandafter{\pxkc@blk}}}
 \def\pxkc@cjkcategory@b#1{%
   \pxkc@get@cp{#1}\ifnum\pxkc@cp>"7F
-    \pxkc@kcatcode{\pxkc@cp}{\pxkc@arg}% FIXME: consider group
+    \pxkc@kcatcode{\pxkc@cp}{\pxkc@arg}%
   \else
     \edef\pxkc@blk{#1}%
     \pxkc@set@cjkcategory
   \fi}
 
 %% \pxkc@set@cjkcategory
-% Sees \pxkc@blk and \pxkc@arg.
+% Sees \pxkc@blk (block name) and \pxkc@arg (kcatcode).
 \def\pxkc@set@cjkcategory{%
   \pxkc@letcs\pxkc@tmpa{pxkc@G@@\pxkc@blk}%
   \ifx\pxkc@tmpa\relax
     \pxkc@letcs\pxkc@cp{pxkc@B@@\pxkc@blk}%
     \ifx\pxkc@cp\relax
       \pxkc@err@ivbsy{\pxkc@blk}%
-    \else\ifnum\pxkc@cp<\z@ % defunct
-      \ifpxkc@warn@defunct \pxkc@warn@dfblk{\pxkc@blk}\fi
+    \else\ifnum\pxkc@cp<\z@ % bad
+      \ifpxkc@warn@bad \pxkc@warn@dfblk{\pxkc@blk}\fi
     \else
       \pxkc@kcatcode{\pxkc@cp}{\pxkc@arg}%
     \fi\fi
@@ -605,8 +639,8 @@
     \pxkc@expanded{\noexpand\pxkc@cjkcategory@a{\pxkc@tmpa}}%
   \fi}
 
-%%<*> \pxkc@cjkcategory{<block>}{<kcatcode>}
-%%<*> \pxkc@cjkcategory@mccv{<minmccv>}{<maxmccv>}{<block>}{<kcatcode>}
+%% \pxkc@cjkcategory{<block>}{<kcatcode>}
+%% \pxkc@cjkcategory@mccv{<minmccv>}{<maxmccv>}{<block>}{<kcatcode>}
 % Other entry points for internal use.
 \def\pxkc@cjkcategory#1#2{%
   \def\pxkc@blk{#1}\edef\pxkc@arg{#2}%
@@ -628,9 +662,9 @@
   \ifx\pxkc@next\relax
     \pxkc@err@ivmsy{#1}%
   \else
-    \pxkc@warn@defunctfalse
+    \pxkc@warn@badfalse
     \pxkc@next
-    \pxkc@warn@defuncttrue
+    \pxkc@warn@badtrue
   \fi}
 
 %--------------------------------------- CJK category modes
@@ -639,7 +673,7 @@
 \let\pxkc@cat\relax
 \let\pxkc@base@cat\relax
 
-%% \[pxkc@K@@<block>] : Invariant blocks
+%% \[pxkc@K@@<block>] : the kcatcode of CJK core blocks
 \def\do#1#2{\expandafter\chardef\csname pxkc@K@@#1\endcsname=#2 }
 %C======================================
 \do{latn}  {15} % Basic Latin
@@ -705,6 +739,7 @@
     \pxkc@cjkcategory{cjk12}{18}%
   \fi}
 
+%% \[pxkc@M@@<mode>] : the implementation of a mode
 %P======================================
 %% 'forcecjk'
 \def\pxkc@M@@forcecjk{%
