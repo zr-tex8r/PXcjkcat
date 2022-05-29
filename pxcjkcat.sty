@@ -80,6 +80,9 @@
 \def\pxkc@debug#1{\typeout{**[\pxkc@pkgname] #1}}
 \fi
 
+%% packages
+\RequirePackage{keyval}\relax
+
 %% unique tokens
 \def\pxkc@end{\pxkc@end@}
 \let\pxkc@mk\indent
@@ -102,6 +105,22 @@
 \def\pxkc@expanded#1{%
   \edef\pxkc@next{#1}\pxkc@next}
 
+%% \pxkc@setup{<key>=<value>,...}
+\def\pxkc@setup#1{%
+  \let\pxkc@KV@errx\KV@errx \def\KV@errx##1{\@unknownoptionerror}%
+  \setkeys{\pxkc@pkgname}{#1}
+  \let\KV@errx\pxkc@KV@errx}
+
+%% \pxkc@handle@key{<key>}{<value>}{<name>}
+\def\pxkc@handle@key#1#2#3{%
+  \expandafter\let\expandafter\pxkc@tmpa\csname pxkc@#3\endcsname
+  \ifx\pxkc@tmpa\relax
+    \PackageError\pxkc@pkgname
+     {Invalid value for key '#1':\MessageBreak\@spaces#2}%
+     {\@eha}%
+  \else \pxkc@tmpa
+  \fi}
+
 %--------------------------------------- package options
 
 %% mode CCV options
@@ -122,11 +141,21 @@
 \def\pxkc@M@@default      {1}
 \def\pxkc@M@@nomode       {0}% special
 \chardef\pxkc@good@mccv=0
+%% key-value options
+\define@key{\pxkc@pkgname}{ccv}{%
+  \pxkc@handle@key{ccv}{#1}{kv@ccv@@#1}}
+\@namedef{pxkc@kv@ccv@@1}{\chardef\pxkc@mccv=1 }
+\@namedef{pxkc@kv@ccv@@2}{\chardef\pxkc@mccv=2 }
+\@namedef{pxkc@kv@ccv@@3}{\chardef\pxkc@mccv=3 }
+\@namedef{pxkc@kv@ccv@@4}{\chardef\pxkc@mccv=4 }
+\@namedef{pxkc@kv@ccv@@real}{\chardef\pxkc@mccv=0 }
+%% dispatch
 \DeclareOption*{%
-  \@ifundefined{pxkc@M@@\CurrentOption}{\@unknownoptionerror}{%
+  \@ifundefined{pxkc@M@@\CurrentOption}{% key option
+    \expandafter\pxkc@setup\expandafter{\CurrentOption}%
+  }{%else; mode option
     \chardef\pxkc@good@mccv=\@nameuse{pxkc@M@@\CurrentOption}\relax
     \edef\pxkc@ccmode@opt{\CurrentOption}}}
-%% dispatch
 \ProcessOptions\relax
 
 %% clear up
