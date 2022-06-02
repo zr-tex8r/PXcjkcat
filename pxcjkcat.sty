@@ -28,6 +28,7 @@
 \catcode63=\the\catcode63%
 \catcode94=\the\catcode94%
 \catcode96=\the\catcode96%
+\catcode239=\the\catcode239%
 \endlinechar=\the\endlinechar%
 \relax}%
 \catcode33=12 % <!>
@@ -43,6 +44,7 @@
 \catcode63=12 % <?>
 \catcode94=7 % <^>
 \catcode96=12 % <`>
+\catcode239=13 %
 \AtEndOfPackage{%
 \pxkc@restore@codes
 \let\pxkc@restore@codes\relax}
@@ -85,6 +87,7 @@
 
 %% unique tokens
 \def\pxkc@end{\pxkc@end@}
+\def\pxkc@mt{\pxkc@mt@}
 \let\pxkc@mk\indent
 
 %% variables
@@ -260,6 +263,19 @@
     \@ehc}
   \let\pxkc@mccv\pxkc@ccv
 \fi
+
+%--------------------------------------- helpers
+
+%% constants
+\chardef\pxkc@ascii@max="7F
+
+%% \pxkc@get@jchar{<charcode>}
+\def\pxkc@get@jchar#1{%
+  \begingroup
+    \forcecjktoken
+    \kansujichar\@ne=#1\relax
+    \xdef\pxkc@jchar{\kansuji\@ne}%
+  \endgroup}
 
 %% \pxkc@kcatcode{<charcode>}{<kcatcode>}
 \ifx\bxUseDebug\@undefined
@@ -876,6 +892,85 @@
   \pxkc@cjkcategory@mccv{3}{4}{latnA}{15}%
   \pxkc@cjkcategory@mccv{4}{4}{latnB}{15}%
 }
+
+%--------------------------------------- safe text expansion
+
+%% variables
+\let\pxkc@expd\relax
+
+%% \pxkc@expand@text\CS{<text>}
+\def\pxkc@expand@text#1#2{%
+  \begingroup
+    \let\UTFviii@invalid@err \noexpand
+    \let\UTFviii@two@octets  \pxkc@lead@byte@NB
+    \let\UTFviii@three@octets\pxkc@lead@byte@NC
+    \let\UTFviii@four@octets \pxkc@lead@byte@ND
+    \edef\pxkc@tmpa{#2}%
+    \let\UTFviii@invalid@err \pxkc@expand@text@err
+    \let\UTFviii@two@octets  \pxkc@lead@byte@PB
+    \let\UTFviii@three@octets\pxkc@lead@byte@PC
+    \let\UTFviii@four@octets \pxkc@lead@byte@PD
+    \let\pxkc@expd\@empty
+    \expandafter\pxkc@expand@text@a\pxkc@tmpa\pxkc@mk\pxkc@end
+    \global\let\pxkc@g@tmpa\pxkc@expd
+  \endgroup
+  \let#1\pxkc@g@tmpa}
+\def\pxkc@expand@text@a{%
+  \futurelet\pxkc@tok\pxkc@expand@text@b}
+\def\pxkc@expand@text@b{%
+  \ifcat\noexpand\pxkc@tok0% other
+    \let\pxkc@next\pxkc@expand@text@d
+  \else\ifcat\noexpand\pxkc@tok\@sptoken
+    \let\pxkc@next\pxkc@expand@text@f
+  \else\ifx\pxkc@tok\pxkc@mk % end
+    \let\pxkc@next\pxkc@expand@text@fin
+  \else\ifx\pxkc@tok\bgroup
+    \let\pxkc@next\pxkc@expand@text@err
+  \else\expandafter\ifx\noexpand\pxkc@tok\pxkc@tok % unexpandable
+    \let\pxkc@next\pxkc@expand@text@c
+  \else \let\pxkc@next\pxkc@expand@text@e
+  \fi\fi\fi\fi\fi
+  \pxkc@next}
+\def\pxkc@expand@text@c#1{%
+  \edef\pxkc@expd{\pxkc@expd#1}%
+  \pxkc@expand@text@a}
+\def\pxkc@expand@text@d#1{%
+  \ifnum`#1>\pxkc@ascii@max % high byte
+    \let\pxkc@next\pxkc@expand@text@ret
+    \lccode"EF=`#1\relax\lowercase{\expandafter^^ef}% reactivate
+  \else \expandafter\pxkc@expand@text@c\expandafter#1%
+  \fi}
+\def\pxkc@expand@text@e#1{%
+  \ifcat\noexpand#1\noexpand^^ef% active-char
+    \let\pxkc@next\pxkc@expand@text@ret
+    \expandafter#1%
+  \else \expandafter\pxkc@expand@text@err
+  \fi}
+\expandafter\def\expandafter\pxkc@expand@text@f\space{%
+  \pxkc@expand@text@c\space}
+\def\pxkc@expand@text@fin#1#2\pxkc@end{%
+  \ifx\pxkc@mt#2\pxkc@mt \else \let\pxkc@expd\relax \fi}
+\def\pxkc@expand@text@err{%
+  \pxkc@expand@text@fin\pxkc@mk}
+\def\pxkc@expand@text@ret{% UTF-8 bytes are read
+  \pxkc@get@jchar\count@
+  \pxkc@expand@text@c\pxkc@jchar}
+
+%% processors
+\def\pxkc@lead@byte@NB#1{\noexpand#1\noexpand}
+\def\pxkc@lead@byte@NC#1#2{\noexpand#1\noexpand#2\noexpand}
+\def\pxkc@lead@byte@ND#1#2#3{\noexpand#1\noexpand#2\noexpand#3\noexpand}
+\def\pxkc@lead@byte@PB#1#2{%
+  \count@`#1 \advance\count@-"C0
+  \pxkc@trail@byte{#2}\pxkc@next}
+\def\pxkc@lead@byte@PC#1#2#3{%
+  \count@`#1 \advance\count@-"E0
+  \pxkc@trail@byte{#2}\pxkc@trail@byte{#3}\pxkc@next}
+\def\pxkc@lead@byte@PD#1#2#3#4{%
+  \count@`#1 \advance\count@-"F0
+  \pxkc@trail@byte{#2}\pxkc@trail@byte{#3}\pxkc@trail@byte{#4}\pxkc@next}
+\def\pxkc@trail@byte#1{%
+  \multiply\count@"40 \advance\count@`#1 \advance\count@-"80 }
 
 %--------------------------------------- miscellaneous accessories
 
