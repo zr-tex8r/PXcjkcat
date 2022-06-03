@@ -74,6 +74,12 @@
   \PackageWarning\pxkc@pkgname
    {Unsupported Unicode block '#1' is\MessageBreak
     specified}}
+\def\pxkc@err@ivfmt#1{%
+  \PackageError\pxkc@pkgname
+   {Block specs are given in bad format%
+    \ifx\detokenize\@undefined\else
+      :\MessageBreak \space'\detokenize{#1}'\fi}%
+   {\@eha}}
 
 %% \pxkc@debug{<message>}
 \ifx\bxUseDebug\@undefined
@@ -268,6 +274,10 @@
 
 %% constants
 \chardef\pxkc@ascii@max="7F
+
+%% \pxkc@cond\ifXXX...\fi{<true>}{<false>}
+\def\pxkc@cond#1\fi{%
+  #1\expandafter\@firstoftwo\else\expandafter\@secondoftwo\fi}
 
 %% \pxkc@get@jchar{<charcode>}
 \def\pxkc@get@jchar#1{%
@@ -681,9 +691,8 @@
     \forcecjktoken
   \expandafter\endgroup\pxkc@cjkcategory@}% read args
 \def\pxkc@cjkcategory@#1#2{%
-  \ifnum2<1#2 % <category> is a number
-    \edef\pxkc@arg{#2}%
-  \else
+  \edef\pxkc@arg{#2}%
+  \ifnum2<1\pxkc@arg\relax \else % <category> is a number
     \@ifundefined{pxkc@C@@#2}{%
       \pxkc@err@ivcsy{#2}\def\pxkc@arg{18}%
     }{%else
@@ -692,14 +701,23 @@
   \fi
   \pxkc@cjkcategory@a{#1}}
 \def\pxkc@cjkcategory@a#1{%{<block>}
-  \@for\pxkc@blk:={#1}\do{%
-    \expandafter\pxkc@cjkcategory@b\expandafter{\pxkc@blk}}}
+  \pxkc@expand@text\pxkc@tmpa{#1}%
+  \ifx\pxkc@tmpa\relax
+    \pxkc@err@ivfmt{#1}%
+  \else
+    \@for\pxkc@blk:=\pxkc@tmpa\do{%
+      \expandafter\pxkc@cjkcategory@b\expandafter{\pxkc@blk}}%
+  \fi}
 \def\pxkc@cjkcategory@b#1{%
-  \pxkc@get@cp{#1}\ifnum\pxkc@cp>"7F
+  \pxkc@get@cp{#1}\ifpxkc@ok % charcode
     \pxkc@kcatcode{\pxkc@cp}{\pxkc@arg}%
   \else
-    \edef\pxkc@blk{#1}%
-    \pxkc@set@cjkcategory
+    \ifcase\pxkc@cp % no-op
+    \or % name
+      \edef\pxkc@blk{#1}%
+      \pxkc@set@cjkcategory
+    \else \pxkc@err@ivfmt{#1}% error
+    \fi
   \fi}
 
 %% \pxkc@set@cjkcategory
@@ -735,9 +753,40 @@
   \fi\fi}
 
 %% \pxkc@get@cp{<arg>}
+% ok / 0=nop / 1=name / 2=err
 \def\pxkc@get@cp#1{%
-  \afterassignment\pxkc@get@cp@a\chardef\pxkc@cp=`#1?\pxkc@mk}
-\def\pxkc@get@cp@a#1\pxkc@mk{}
+  \pxkc@okfalse \chardef\pxkc@cp\z@
+  \pxkc@get@cp@a#1\pxkc@mk\pxkc@end}
+\def\pxkc@get@cp@a#1{%
+  \pxkc@cond\ifx#1\pxkc@mk\fi{%
+    \pxkc@get@cp@fin\pxkc@mk
+  }{\pxkc@cond\ifnum\pxkc@get@cp@b#1>\z@\fi{%
+    \pxkc@get@cp@c#1%
+  }{\pxkc@cond\ifnum2<"1#1 \fi{%
+    \pxkc@get@cp@c"#1%
+  }{%else
+    \chardef\pxkc@cp`#1 %
+    \pxkc@cond\ifnum\pxkc@cp>\pxkc@ascii@max\fi{%
+      \pxkc@oktrue \pxkc@get@cp@fin
+    }{%
+      \pxkc@okfalse \chardef\pxkc@cp\@ne \pxkc@get@cp@e
+    }%
+  }}}}
+\def\pxkc@get@cp@b#1{0\if#1"1\fi\if#1'1\fi\if#1+1\fi}
+\def\pxkc@get@cp@c{%
+  \afterassignment\pxkc@get@cp@d\count@=}
+\def\pxkc@get@cp@d{%
+  \chardef\pxkc@cp\count@
+  \ifnum\pxkc@cp=\count@ \pxkc@oktrue
+  \else \chardef\pxkc@cp\z@
+  \fi
+  \pxkc@get@cp@fin}
+\def\pxkc@get@cp@e#1\pxkc@mk{%
+  \pxkc@get@cp@fin\pxkc@mk}
+\def\pxkc@get@cp@fin#1\pxkc@mk\pxkc@end{%
+  \ifx\pxkc@mt#1\pxkc@mt\else
+    \pxkc@okfalse \chardef\pxkc@cp\tw@
+  \fi}
 
 %%<*> \cjkcategorymode{<mode>}
 % Invokes the cjk-category mode <mode>.
