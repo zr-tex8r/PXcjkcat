@@ -11,7 +11,7 @@
   pdftitle={pxcjkcatパッケージ},
   pdfauthor={八登崇之}}
 \usepackage{bxtexlogo}
-\bxtexlogoimport{*}
+\bxtexlogoimport{*,LaTeXTeX}
 \usepackage[verb]{bxghost}
 \usepackage{shortvrb}
 \MakeShortVerb{\|}
@@ -19,12 +19,13 @@
 \newenvironment{myverbatim}
   {\quote\small\verbatim}
   {\endverbatim\endquote}
-\newcommand{\PkgVersion}{1.3}
-\newcommand{\PkgDate}{2022/05/28}
+\newcommand{\PkgVersion}{1.4}
+\newcommand{\PkgDate}{2022/06/06}
 \newcommand{\Pkg}[1]{\textsf{#1}}
-\newcommand{\Meta}[1]{$\langle$\mbox{}#1\mbox{}$\rangle$}
+\newcommand{\Meta}[1]{%
+  $\langle$\mbox{}\nolinebreak#1\nolinebreak\mbox{}$\rangle$}
 \newcommand{\Note}{\par\noindent ※}
-\newcommand{\Means}{：\quad}
+\newcommand{\Means}{：~}
 \newcommand{\strong}{\textsf}
 \newcommand{\wbr}{\linebreak[0]}
 \newcommand{\Code}[1]{{\usefont{T1}{lmtt}{l}{n}#1}}
@@ -36,12 +37,180 @@
 \maketitle
 
 \begin{abstract}
-本パッケージは、
-{\upTeX}の和文文字カテゴリ（kcatcode）を扱う{\LaTeX}上の
-インタフェースを提供する。
+{\upTeX}エンジンには
+「ソース中の非ASCII文字の扱い」
+（和文・欧文の何れとして扱うか、等）
+を制御するための「和文カテゴリ（kcatcode）」
+という設定がある。
+本パッケージは、{\upTeX}の和文カテゴリを扱うための
+{\LaTeX}の文書作成者向けのインタフェースを提供する。
 \end{abstract}
 
 \tableofcontents
+
+%===========================================================
+\section{前提知識}
+\label{sec:Introduction}
+
+%-------------------
+\subsection{和文カテゴリ}
+\label{ssec:cjkcategory}
+
+{\upTeX}エンジンの「\strong{和文カテゴリ}（kcatcode）」の設定は
+「ソース中の非ASCII文字の振舞」を制御するためのものである。
+例えば「ア」（U+30A2）という文字は普通は（既定値では）
+仮名として扱われるが、U+30A2の和文カテゴリを変更することで、
+これを「和文記号扱い」「欧文扱い」などに変えることができる。
+
+{\upTeX}の仕様では和文カテゴリの値は15～19の範囲の整数
+（\strong{和文カテゴリコード}）
+として表される。
+本パッケージでは操作を直感的にするため和文カテゴリの値に名前
+（\strong{カテゴリID}）を付けて扱う。
+和文カテゴリの値の一覧は以下の通りである。
+
+\begin{center}\small\begin{tabular}{ccl}
+  \hline
+  コード & カテゴリID & 意味 \\
+  \hline
+  15 & |noncjk| & 欧文扱い \\
+  16 & |kanji|  & 漢字扱い \\
+  17 & |kana|   & 仮名扱い \\
+  18 & |cjk|    & 「その他の和文」扱い \\
+  19 & |hangul| & ハングル扱い \\
+  \hline
+\end{tabular}\end{center}
+和文カテゴリの設定による実際の「振舞」の違いには
+以下のようなものがある
+\footnote{なお、現在の{\upTeX}の仕様では|kanji|（16）と|kana|（17）
+  の間には「振舞」の違いは存在しないようである。}。
+\begin{itemize}
+\item 和文カテゴリが|noncjk|（15）である文字は欧文として扱われる。
+  対して、|noncjk|以外の文字は和文扱いとなる。
+  \Note なお、欧文扱いとなる文字は欧文{\LaTeX}（{\pdfLaTeX}）と
+  同じ機構で処理される。
+  すなわち、{\TeX}のレベルではUTF-8のバイト列として扱われ、
+  これを\Pkg{inputenc}パッケージが適切に処理することで
+  初めて「文字」として認識される。
+\item (u){\pLaTeX}には「行末にある文字が和文文字の場合には当該の改行は
+  空白にならずに無視される」という独自の入力規則があるが、
+  和文カテゴリが|hangul|（19）である和文文字が行末にある場合は
+  欧文と同様に改行は空白を発生させる。
+\item {\LaTeX}の|\|から始まる命令名（制御綴）の構成について
+  「複数文字の名前を作れるのは英字のみ」という規則がある。
+  命令名構成の規則について、和文カテゴリが
+  |kanji|（16）・|kana|（17）・|hangul|（19）
+  の和文文字は「英字」と同じ扱いになり、
+  |cjk|（18）の和文文字は「英字以外の欧文文字」と同じ扱いになる。
+\end{itemize}
+
+ただし、{\upTeX}の仕様では、和文文字カテゴリの設定は“文字単位”ではなく
+“Unicodeブロック単位”で行うようになっている（一部例外あり）。
+従って、例えば「ア」（U+30A2）の和文カテゴリを変更したいという場合には、
+U+30A2が属する“Katakana”（U+30A0～30FF）のブロックについて
+和文カテゴリの設定を行うことになる。
+
+本パッケージが提供する命令を利用すると
+「“Katakana”の和文カテゴリを|cjk|（18）に変更する」
+という設定は
+\begin{quote}\small
+\begin{verbatim}
+\cjkcategory{kana}{cjk}
+\end{verbatim}
+\end{quote}
+で実現できる。
+
+%-------------------
+\subsection{和文カテゴリモード}
+\label{ssec:cjkcategory-mode}
+
+\strong{和文カテゴリモード}は
+全てのブロックに対する和文カテゴリの一括設定
+（プリセット設定）のことである
+（TODO：ちゃんと説明する）。
+
+モード設定には以下のものがある。
+何れのモードも、「CJK中核セット」（後述）のブロック群の
+設定は共通で、
+その他のブロックが欧文扱い（|noncjk|）であるか
+和文扱い（|cjk|%
+\footnote{全てのモード設定において、「CJK中核セット」\strong{以外}の
+  ブロックのカテゴリは必ず|noncjk|か|cjk|の何れかになる。}%
+）であるかが異なる。
+\begin{itemize}
+\item |forcecjk|\Means
+  全てのブロックを和文扱い
+  （|noncjk|以外）とする。
+  和文フォントの中のUnicode値の割当がある全ての文字を
+  和文文字として直接用いることができる。
+\item |default|\Means
+  現在のモードCCVに対応する{\upTeX}の版
+  （例えばモードCCVが3ならばv1.23）
+  における既定設定と一致させる。
+  \Note モードCCVが2以下の場合は|forcecjk|と同一の設定になる。
+\item |prefercjk|\Means
+  和文扱いのブロックとして「CJK中核セット」の他に
+  「Adobeの定めるCJK文字集合
+  \footnote{Adobe-Japan1、Adobe-GB1、Adobe-CNS1、Adobe-Korea1の4つ。}%
+  の何れかと共通部分をもつ文字ブロック」を加えて、
+  残りを欧文扱いに設定する。
+\item |prefercjkvar|\Means\hspace{-.25em}%
+  |prefercjk|からギリシャ・キリル文字の
+  ブロックを欧文扱いに変更したもの。
+\item |japanese|\Means
+  和文扱いのブロックとして「CJK中核セット」の他に
+  「Adobe-Japan1の全角幅のグリフ
+  の何れかと共通部分をもつ文字ブロック」を加えて、
+  残りを欧文扱いに設定する。
+\item |japanesevar|\Means
+  |japanese|からギリシャ・キリル文字の
+  ブロックを欧文扱いに変更したもの。
+\item |prefernoncjk|\Means
+  「CJK中核セット」のブロックのみを和文扱いとし、
+  残りを欧文扱いにする。
+\end{itemize}
+
+\Note 各モードでの具体的な設定値については\ref{sec:Values}節を参照。
+
+\paragraph{CJK中核セット}
+「CJK中核セット」は以下の文字種が属するブロックのセットを指す。
+（括弧内は、モード設定において当該のブロックに設定される
+和文カテゴリの値。）
+  \begin{itemize}
+  \item 漢字・部首・注音字母（|kanji|）
+  \item ひらがな・カタカナ（|kana|）
+   \item CJK記号の一部・全角半角互換形・彝文字
+    ・西夏文字・女書文字・契丹文字（|cjk|）
+    \Note モードCCVが2以上の場合、|cjk12|の再分割の|cjk1b|、
+      |cjk1c|は|kana|に設定される。
+  \item ハングル完成形・ハングル字母（|hangul|）
+\end{itemize}
+
+%-------------------
+\subsection{和文トークン状態}
+\label{ssec:cjktoken}
+
+{\upTeX}には、和文カテゴリ（kcatcode）とは別に、
+非ASCII文字全体の和文・欧文扱いの設定を一斉に切り替えるための
+命令が存在する
+\footnote{これらの命令は本パッケージが提供するものではなく
+  {\upTeX}に元から存在するものであることに注意。}。
+\begin{itemize}
+\item |\enablecjktoken|\Means
+  和文・欧文扱いの設定を和文カテゴリの設定に従わせる。
+\item |\disablecjktoken|\Means
+  和文カテゴリ設定に関わらず非ASCII文字全体を欧文扱いにする。
+  \Note あたかも全ブロックの和文カテゴリを|noncjk|（15）に設定したのと
+  同じ状態になる。
+\item |\forcecjktoken|\Means
+  和文カテゴリ設定に関わらず非ASCII文字全体を和文扱いにする。
+  \Note 和文カテゴリが|noncjk|（15）であるブロックは
+  あたかもそれが|cjk|（18）であるように動作する。
+\end{itemize}
+
+これらの命令群により変更されるパラメタのことを本パッケージでは
+「\strong{和文トークン状態}」と呼ぶことにする
+\footnote{「和文トークン状態」を指す公式の用語は存在しないと思われる。}。
 
 %===========================================================
 \section{パッケージ読込}
@@ -74,44 +243,59 @@
   \item |real|または|ccv+|\Means
     モードCCVを{\upTeX}の実際のCCVと一致させる。
   \end{itemize}
-\item |\cjkcategorymode|\strong{命令で有効なモード値}\Means
-  和文カテゴリがモードに従って設定される。
-  \Note モード値オプションが非指定の場合は、パッケージ読込時に
-  和文カテゴリが変更されることはない。
+\item \strong{和文カテゴリモード値}\Means
+  |\cjkcategorymode|命令で有効なモード値（|prefernoncjk|等）
+  をオプションとして指定可能で、
+  この場合、和文カテゴリがモードに従って設定される。
+  \Note 和文カテゴリモード値オプションが指定されていない場合は、
+  パッケージ読込時に和文カテゴリが変更されることはない。
 \item |nomode|\Means
-  モード値オプションの効果を打ち消す。
+  和文カテゴリモード値オプションの効果を打ち消す。
 \end{itemize}
 
 %===========================================================
 \section{機能}
 \label{sec:Function}
 
+%-------------------
+\subsection{和文カテゴリ設定に関連する機能}
+\label{ssec:cjkcategory-function}
+
 \begin{itemize}
 \item |\cjkcategory{|\Meta{ブロック}|,...}{|\Meta{カテゴリ}|}|\Means
-  \Meta{ブロック}で表される文字ブロック（複数指定が可能）の
+  \Meta{ブロック}で指定される文字ブロック（複数指定が可能）の
   和文カテゴリを\Meta{カテゴリ}に変更する。
 
   \Meta{ブロック}は以下の何れかの形式で指定する：
   \begin{itemize}
-  \item ブロックID（後述）%
+  \item ブロックID（\ref{sec:Blocks}節参照）%
     \footnote{ブロックIDによる指定は{\upTeX}の版の影響を受けない。
       例えば、{\upTeX}の版（およびモードCCV指定）が何であっても、
       |latn1|は常に“Latin-1 Supplement”の範囲（U+0080～00FF）を指す。
       実CCVが3以上の場合に|latn1|のカテゴリ設定を行った場合は、
       実際には|latnx|と|latny|の2つのブロックに対して設定が行われる。}
-  %\item ブロック名
   \item 非ASCII文字1つ\Means
-    その文字の属するブロックを指す。
+    当該の文字が属するブロックを指す。
     \Note 「文字の属するブロック」は、モードCCV設定とは無関係であり
     常に{\upTeX}の実際のブロック定義に従う。
     従ってその動作は{\upTeX}の版に依存することに注意。
-  %\item 整数値\Means
-  %  その符号位置の属するブロックを指す。
+  \item 符号値（整数値）\Means
+    当該の符号値の文字が属するブロックを指す。
+    符号値は以下の形式で指定できる\Means
+    \begin{itemize}
+    \item \Meta{16進表記}\Means 例えば|1F600|。
+    \item |"|\Meta{16進表記}\Means 例えば|"1F600|。
+      \Note 16進数字の|A|～|F|は大文字で書く。
+    \item |+|\Meta{整数}\Means 例えば|+128512|は10進表記で128512、
+      すなわちU+1F600を表す。
+      \Note \Meta{整数}の部分には一般に任意の
+      「{\LaTeXTeX}で整数を表すテキスト」が記述できる。
+      例えば|+\value{mycode}|のように書くとカウンタ値を指定できる。
+    \end{itemize}
+    \Note 前項と同様、動作が{\upTeX}の版に依存することに注意を要する。
   \end{itemize}
-  \Meta{カテゴリ}は以下に示す「カテゴリID」で指定する
-    \footnote{括弧内の整数値は{\upTeX}が内部で用いている
-      「カテゴリコード値」であり、「カテゴリID」の代わりに
-      この値を指定することもできる。}：
+  \Meta{カテゴリ}は「カテゴリID」または
+  「カテゴリコード」（括弧内の整数値）で指定する。
   \begin{itemize}
   \item |noncjk|（15）\Means 欧文扱い
   \item |kanji|または|han|（16）\Means 漢字扱い
@@ -129,57 +313,62 @@
 
 \item |\cjkcategorymode{|\Meta{モード}|}|\Means
   全てのブロックの和文カテゴリの一括設定（モード設定）を行う。
-  モードには以下のものがある。
-  何れのセットも、後述する「CJK中核セット」の設定は共通であり、
-  それ以外のブロックが欧文扱い（|noncjk|）であるか
-  和文扱い（|cjk|%
-  \footnote{全てのモード設定において、「CJK中核セット」\strong{以外}の
-    ブロックのカテゴリは必ず|noncjk|か|cjk|の何れかになる。}%
-  ）であるかが異なる。
+  有効なモード設定の値は以下の通りである。
+  \Note モード設定の詳細については
+  \ref{ssec:cjkcategory-mode}節を参照。
   \begin{itemize}
-  \item |forcecjk|\Means
-    ASCII文字のみ欧文扱いで他のブロックは全て和文扱い
-    （|noncjk|以外）とする。
-    和文フォントの中のUnicode値の割当がある全ての文字を
-    和文文字として直接用いることができる。
-  \item |default|\Means
-    現在のモードCCVに対応する{\upTeX}の版
-    （例えばモードCCVが3ならばv1.23）
-    における既定設定と一致させる。
-    \Note モードCCVが2以下の場合は|forcecjk|と同一の設定になる。
-  \item |prefercjk|\Means
-    和文扱いのブロックとして、「CJK中核セット」のものに加えて、
-    「Adobeの定めるCJK文字集合
-    \footnote{Adobe-Japan1、Adobe-GB1、Adobe-CNS1、Adobe-Korea1の4つ。}%
-    の何れかと共通部分をもつ文字ブロック」を加えて、
-    残りを欧文扱いに設定する。
-  \item |prefercjkvar|\Means
-    |prefercjk|において、ギリシャ・キリル文字の
-    ブロックを欧文扱いに変更したもの。
-  \item |japanese|\Means
-    和文扱いのブロックとして、「CJK中核セット」のものに加えて、
-    「Adobe-Japan1の全角幅のグリフ
-    の何れかと共通部分をもつ文字ブロック」を加えて、
-    残りを欧文扱いに設定する。
-  \item |japanesevar|\Means
-    |japanese|において、ギリシャ・キリル文字の
-    ブロックを欧文扱いに変更したもの。
-  \item |prefernoncjk|\Means
-    「CJK中核セット」のブロックのみを和文扱いとし、
-    残りを欧文扱いにする。
+  \item |forcecjk|
+  \item |default|
+  \item |prefercjk|
+  \item |prefercjkvar|
+  \item |japanese|
+  \item |japanesevar|
+  \item |prefernoncjk|
   \end{itemize}
 
-  ここで「CJK中核セット」の内容は以下のとおりである。
-    \begin{itemize}
-    \item 漢字・部首・注音字母\Means |kanji|に設定。
-    \item ひらがな・カタカナ\Means |kana|に設定。
-    \item CJK記号の一部・全角半角互換形・彝文字
-      ・西夏文字・女書文字・契丹文字\Means |cjk|に設定。
-      \Note モードCCVが2以上の場合、|cjk12|の再分割の|cjk1b|、
-        |cjk1c|は|kana|に設定される。
-    \item ハングル完成形・ハングル字母\Means |hangul|に設定。
+\end{itemize}
+
+%-------------------
+\subsection{和文トークン状態に関する機能}
+\label{ssec:cjktoken-function}
+
+\Note 「和文トークン状態」については\ref{ssec:cjktoken}節を参照。
+
+\begin{itemize}
+
+\item |\getcjktokenmode|\Means
+  現在の和文トークン状態の取得して、
+  それを表す整数値を|\thecjktokenmode|に設定する。
+  \begin{itemize}
+  \item 0\Means |\disablecjktoken|の状態。
+  \item 1\Means |\enablecjktoken|の状態。
+  \item 2\Means |\forcecjktoken|の状態。
+  \item 255\Means 状態取得に失敗した%
+  \footnote{{\TeX} Live 2022以降で{\eTeX}拡張無しの{\upTeX}エンジンの
+    場合は取得ができない。
+    しかし、2014年以降の{\LaTeX}カーネルは{\eTeX}拡張を必須としている
+    ので、そのようなエンジンの上で{\LaTeX}が動作している可能性は
+    ほぼ考えられない。
+    従って、現実的には255が返ることはないと思ってよい。}。
   \end{itemize}
-  \Note 各モードでの具体的な設定値については\ref{sec:Values}節を参照。
+
+\item |\setcjktokenmode{|\Meta{整数値}|}|\Means
+  |\getcjktokenmode|の規則の整数値を用いて和文トークン状態を設定する。
+
+\item |\withcjktokendisabled{|\Meta{コード}|}|\Means
+  一時的に|\disablecjktoken|に変更した状態で、
+  \Meta{コード}を実行する。
+\item |\withcjktokenenabled{|\Meta{コード}|}|\Means
+  一時的に|\enablecjktoken|に変更した状態で、
+  \Meta{コード}を実行する。
+\item |\withcjktokenforced{|\Meta{コード}|}|\Means
+  一時的に|\forcecjktoken|に変更した状態で、
+  \Meta{コード}を実行する。
+\Note 以上3つの命令はどれも、
+「和文トークン状態を設定して\Meta{コード}を実行した後
+和文トークン状態を再設定する」
+という動作を行う。
+そのため新たに局所化グループに入ることはない。
 
 \end{itemize}
 

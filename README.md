@@ -65,10 +65,10 @@ following lines in the preamble:
 If your document is mainly in Japanese, then put the following lines
 in the preamble:
 
-  \usepackage[prefercjkvar]{pxcjkcat}
+  \usepackage[ccv3,japanesevar]{pxcjkcat}
   \usepackage[utf8]{inputenc}
 
-The former setting treats the "CJK-ambiguous" punctuation symbols as
+The former setting treats the “CJK-ambiguous” punctuation symbols as
 non-CJK letters, while the latter as CJK letters. Of course, your
 document must in encoded in UTF-8.
 
@@ -90,6 +90,7 @@ document must in encoded in UTF-8.
 Revision History
 ----------------
 
+  * Version 1.4 〈2022/06/06〉
   * Version 1.3 〈2022/05/28〉
   * Version 1.2 〈2022/05/25〉
   * Version 1.1 〈2018/04/01〉
