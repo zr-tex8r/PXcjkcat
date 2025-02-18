@@ -10,7 +10,7 @@
 
 %% package declaration
 \NeedsTeXFormat{pLaTeX2e}
-\ProvidesPackage{pxcjkcat}[2025/02/18 v1.5 PX cjk-category mode]
+\ProvidesPackage{pxcjkcat}[2025/02/20 v1.6-dev PX cjk-category mode]
 \def\pxkc@pkgname{pxcjkcat}
 
 %% code guards
@@ -137,6 +137,7 @@
 \DeclareOption{ccv2}{\chardef\pxkc@mccv=2 }
 \DeclareOption{ccv3}{\chardef\pxkc@mccv=3 }
 \DeclareOption{ccv4}{\chardef\pxkc@mccv=4 }
+\DeclareOption{ccv5}{\chardef\pxkc@mccv=5 }
 \DeclareOption{ccv+}{\chardef\pxkc@mccv=0 }
 \DeclareOption{real}{\chardef\pxkc@mccv=0 }
 %% mode options
@@ -225,9 +226,11 @@
     \chardef\pxkc@ccv=2   % v0.29+
   \else\ifnum\pxkc@uptex@version<125
     \chardef\pxkc@ccv=3   % v1.23+
-  \else
+  \else\ifnum\pxkc@uptex@version<135
     \chardef\pxkc@ccv=4   % v1.25+
-  \fi\fi
+  \else
+    \chardef\pxkc@ccv=5   % v1.35+
+  \fi\fi\fi
 \fi
 \ifx\bxDebugCcv\@undefined\else % override
   \chardef\pxkc@ccv=\bxDebugCcv\relax
