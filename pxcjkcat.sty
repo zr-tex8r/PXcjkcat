@@ -1,7 +1,7 @@
 %%
 %% This is file 'pxcjkcat.sty'.
 %%
-%% Copyright (c) 2010-2022 Takayuki YATO (aka. "ZR")
+%% Copyright (c) 2010-2025 Takayuki YATO (aka. "ZR")
 %%   GitHub:   https://github.com/zr-tex8r
 %%   Twitter:  @zr_tex8r
 %%
@@ -10,7 +10,7 @@
 
 %% package declaration
 \NeedsTeXFormat{pLaTeX2e}
-\ProvidesPackage{pxcjkcat}[2022/06/06 v1.4 PX cjk-category mode]
+\ProvidesPackage{pxcjkcat}[2025/02/18 v1.5 PX cjk-category mode]
 \def\pxkc@pkgname{pxcjkcat}
 
 %% code guards
@@ -677,6 +677,7 @@
 \pxkc@bval{1}{hani2}{"2F800}    {CJK Compatibility Ideographs Supplement}
 \pxkc@bval{4}{haniG}{"30000}    {CJK Unified Ideographs Extension G}
 \pxkc@bval{4}{haniH}{"31350}    {CJK Unified Ideographs Extension H}
+\pxkc@bval{4}{haniJ}{"323B0}    {CJK Unified Ideographs Extension J}
 \pxkc@bval{1}{spc07}{"E0000}    {Tags}
 \pxkc@bval{1}{spc08}{"E0100}    {Variation Selectors Supplement}
 \pxkc@bval{1}{spc09}{"F0000}    {Supplementary Private Use Area-A}
@@ -892,6 +893,7 @@
 \do{hani2} {16} % CJK Compatibility Ideographs Supplement
 \do{haniG} {16} % CJK Unified Ideographs Extension G
 \do{haniH} {16} % CJK Unified Ideographs Extension H
+\do{haniJ} {16} % CJK Unified Ideographs Extension J
 %=======================================
 \ifnum\pxkc@mccv<2
   \do{cjk1b} {18}

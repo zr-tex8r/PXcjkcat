@@ -90,6 +90,7 @@ document must in encoded in UTF-8.
 Revision History
 ----------------
 
+  * Version 1.5 〈2025/02/18〉
   * Version 1.4 〈2022/06/06〉
   * Version 1.3 〈2022/05/28〉
   * Version 1.2 〈2022/05/25〉
