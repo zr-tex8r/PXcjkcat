@@ -10,7 +10,7 @@
 
 %% package declaration
 \NeedsTeXFormat{pLaTeX2e}
-\ProvidesPackage{pxcjkcat}[2025/02/20 v1.6-dev PX cjk-category mode]
+\ProvidesPackage{pxcjkcat}[2025/02/20 v1.6 PX cjk-category mode]
 \def\pxkc@pkgname{pxcjkcat}
 
 %% code guards
@@ -701,6 +701,20 @@
 \pxkc@bval{0}{latnx}{"00A0}{Latin-1 Supplement/Other}
 \pxkc@bval{0}{latny}{"00C0}{Latin-1 Supplement/Latin}
 \fi
+\ifnum\pxkc@ccv<5 \else
+\pxkc@gval{hira}{hirax,hiram}{Hiragana}
+\pxkc@bval{0}{hirax}{"3040}{Hiragana/Other}
+\pxkc@bval{0}{hiram}{"3099}{Hiragana/Modifier}
+\pxkc@gval{sym07}{sym07x,sym07m}{Combining Diacritical Marks for Symbols}
+\pxkc@bval{0}{sym07x}{"20D0}{Combining Diacritical Marks for Symbols/Other}
+\pxkc@bval{0}{sym07m}{"20E3}{Combining Diacritical Marks for Symbols/Modifier}
+\pxkc@gval{sym45}{sym45x,sym45m}{Enclosed Alphanumeric Supplement}
+\pxkc@bval{0}{sym45x}{"1F100}{Enclosed Alphanumeric Supplement/Other}
+\pxkc@bval{0}{sym45m}{"1F1E6}{Enclosed Alphanumeric Supplement/Modifier}
+\pxkc@gval{sym47}{sym47x,sym47m}{Miscellaneous Symbols and Pictographs}
+\pxkc@bval{0}{sym47x}{"1F300}{Miscellaneous Symbols and Pictographs/Other}
+\pxkc@bval{0}{sym47m}{"1F3FB}{Miscellaneous Symbols and Pictographs/Modifier}
+\fi
 \ifx\pxkc@bbslst\@empty\else
   \pxkc@debug{Unsupported blocks:\pxkc@bbslst}
 \fi
@@ -854,6 +868,8 @@
 \do{cjk03} {16} % Ideographic Description Characters
 \do{cjk04} {18} % CJK Symbols and Punctuation
 \do{hira}  {17} % Hiragana
+\do{hirax} {17} % Hiragana/Other
+\do{hiram} {20} % Hiragana/Modifier
 \do{kana}  {17} % Katakana
 \do{bopo}  {16} % Bopomofo
 \do{hang2} {19} % Hangul Compatibility Jamo
@@ -905,6 +921,11 @@
   \do{cjk1b} {18}
   \do{cjk1c} {18}
 \fi
+\ifnum\pxkc@mccv<5 \else
+  \do{cjk03} {18}
+  \do{spc05} {20}
+  \do{spc08} {20}
+\fi
 
 %% \pxkc@reset@all{<kcatcode>}
 \def\pxkc@reset@all#1{%
@@ -919,6 +940,9 @@
 %% 'forcecjk'
 \def\pxkc@M@@forcecjk{%
   \pxkc@reset@all{18}%
+  \pxkc@cjkcategory@mccv{5}{5}{sym07m}{20}%
+  \pxkc@cjkcategory@mccv{5}{5}{sym45m}{20}%
+  \pxkc@cjkcategory@mccv{5}{5}{sym47m}{20}%
 }
 %% 'prefercjk'
 \def\pxkc@M@@prefercjk{%
@@ -930,7 +954,7 @@
 %% 'prefercjkvar'
 \def\pxkc@M@@prefercjkvar{%
   \pxkc@M@@japanesevar
-  \pxkc@cjkcategory@mccv{3}{4}{latny}{18}%
+  \pxkc@cjkcategory@mccv{3}{5}{latny}{18}%
   \pxkc@cjkcategory{latnA}{18}%
   \pxkc@cjkcategory{latnB}{18}%
   \pxkc@cjkcategory{latn2}{18}%
@@ -951,9 +975,11 @@
 \def\pxkc@M@@japanesevar{%
   \pxkc@M@@prefernoncjk
   \pxkc@cjkcategory@mccv{1}{2}{latn1}{18}%
-  \pxkc@cjkcategory@mccv{3}{4}{latnx}{18}%
+  \pxkc@cjkcategory@mccv{3}{5}{latnx}{18}%
   \pxkc@cjkcategory{sym04}{18}%
-  \pxkc@cjkcategory{sym07}{18}%
+  \pxkc@cjkcategory@mccv{1}{4}{sym07}{18}%
+  \pxkc@cjkcategory@mccv{5}{5}{sym07x}{18}%
+  \pxkc@cjkcategory@mccv{5}{5}{sym07m}{20}%
   \pxkc@cjkcategory{sym08}{18}%
   \pxkc@cjkcategory{sym09}{18}%
   \pxkc@cjkcategory{sym10}{18}%
@@ -973,14 +999,17 @@
 %% 'prefernoncjk'
 \def\pxkc@M@@prefernoncjk{%
   \pxkc@reset@all{15}%
+  \pxkc@cjkcategory@mccv{5}{5}{sym45x}{18}%
+  \pxkc@cjkcategory@mccv{5}{5}{sym45m}{20}%
 }
 %=======================================
 %% 'default'
 \def\pxkc@M@@default{%
   \pxkc@M@@forcecjk
-  \pxkc@cjkcategory@mccv{3}{4}{latny}{15}%
-  \pxkc@cjkcategory@mccv{3}{4}{latnA}{15}%
-  \pxkc@cjkcategory@mccv{4}{4}{latnB}{15}%
+  \pxkc@cjkcategory@mccv{3}{5}{latny}{15}%
+  \pxkc@cjkcategory@mccv{3}{5}{latnA}{15}%
+  \pxkc@cjkcategory@mccv{4}{5}{latnB}{15}%
+  \pxkc@cjkcategory@mccv{5}{5}{latn3}{15}%
 }
 
 %--------------------------------------- safe text expansion
