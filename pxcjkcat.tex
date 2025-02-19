@@ -19,8 +19,8 @@
 \newenvironment{myverbatim}
   {\quote\small\verbatim}
   {\endverbatim\endquote}
-\newcommand{\PkgVersion}{1.5}
-\newcommand{\PkgDate}{2025/02/18}
+\newcommand{\PkgVersion}{1.6}
+\newcommand{\PkgDate}{2025/02/20}
 \newcommand{\Pkg}[1]{\textsf{#1}}
 \newcommand{\Meta}[1]{%
   $\langle$\mbox{}\nolinebreak#1\nolinebreak\mbox{}$\rangle$}
@@ -68,6 +68,8 @@
 本パッケージでは操作を直感的にするため和文カテゴリの値に名前
 （\strong{カテゴリID}）を付けて扱う。
 和文カテゴリの値の一覧は以下の通りである。
+\footnote{2.00版以降では14（欧文Unicode扱い）が
+追加されている（実験的機能）。}
 
 \begin{center}\small\begin{tabular}{ccl}
   \hline
@@ -78,6 +80,7 @@
   17 & |kana|   & 仮名扱い \\
   18 & |cjk|    & 「その他の和文」扱い \\
   19 & |hangul| & ハングル扱い \\
+  20 & |modifier| & 結合文字扱い（1.35版以降） \\
   \hline
 \end{tabular}\end{center}
 和文カテゴリの設定による実際の「振舞」の違いには
@@ -99,9 +102,11 @@
 \item {\LaTeX}の|\|から始まる命令名（制御綴）の構成について
   「複数文字の名前を作れるのは英字のみ」という規則がある。
   命令名構成の規則について、和文カテゴリが
-  |kanji|（16）・|kana|（17）・|hangul|（19）
+  |kanji|（16）・|kana|（17）・|hangul|（19）・|modifier|（20）
   の和文文字は「英字」と同じ扱いになり、
   |cjk|（18）の和文文字は「英字以外の欧文文字」と同じ扱いになる。
+\item 組版処理において和文カテゴリが|modifier|（20）の文字は
+  直前の文字と合わせて単一の文字のように扱われる。
 \end{itemize}
 
 ただし、{\upTeX}の仕様では、和文文字カテゴリの設定は“文字単位”ではなく
@@ -239,7 +244,9 @@ U+30A2が属する“Katakana”（U+30A0～30FF）のブロックについて
   \item |ccv3|\Means
     モードCCVを3（{\upTeX} v1.23と互換）とする。
   \item |ccv4|\Means
-    モードCCVを4（{\upTeX} v1.25以降と互換）とする。
+    モードCCVを4（{\upTeX} v1.25～1.34と互換）とする。
+  \item |ccv5|\Means
+    モードCCVを5（{\upTeX} v1.35以降と互換）とする。
   \item |real|または|ccv+|\Means
     モードCCVを{\upTeX}の実際のCCVと一致させる。
   \end{itemize}
@@ -296,12 +303,16 @@ U+30A2が属する“Katakana”（U+30A0～30FF）のブロックについて
   \end{itemize}
   \Meta{カテゴリ}は「カテゴリID」または
   「カテゴリコード」（括弧内の整数値）で指定する。
+  \footnote{\texttt{modifier}は{\upTeX}の1.35版以降でのみ使用可能。
+    2.00版で新設されたカテゴリコードの「14」に対するカテゴリIDは
+    用意していないが、14を直接することは可能である。}
   \begin{itemize}
   \item |noncjk|（15）\Means 欧文扱い
   \item |kanji|または|han|（16）\Means 漢字扱い
   \item |kana|（17）\Means 仮名扱い
   \item |cjk|（18）\Means \<「その他の和文」扱い
   \item |hangul|（19）\Means ハングル扱い
+  \item |modifier|（20）\Means 結合文字扱い
   \end{itemize}
 
   和文カテゴリの変更は局所的（グルーピングに従う）である。
@@ -340,16 +351,16 @@ U+30A2が属する“Katakana”（U+30A0～30FF）のブロックについて
   現在の和文トークン状態を取得して、
   以下の対応規則に従い整数値を|\thecjktokenmode|に設定する。
   \begin{itemize}
-  \item 0\Means |\disablecjktoken|の状態。
-  \item 1\Means |\enablecjktoken|の状態。
-  \item 2\Means |\forcecjktoken|の状態。
-  \item 255\Means 状態取得に失敗した%
+  \item 0\Means |\disablecjktoken|の状態
+  \item 1\Means |\enablecjktoken|の状態
+  \item 2\Means |\forcecjktoken|の状態
+  \item 255\Means 状態取得に失敗した
   \footnote{{\TeX} Live 2022以降で{\eTeX}拡張無しの{\upTeX}エンジンの
     場合は取得ができない。
     しかし、2014年以降の{\LaTeX}カーネルは{\eTeX}拡張を必須としている
     ので、そのようなエンジンの上で{\LaTeX}が動作している可能性は
     ほぼ考えられない。
-    従って、現実的には255が返ることはないと思ってよい。}。
+    従って、現実的には255が返ることはないと思ってよい。}
   \end{itemize}
 
 \item |\setcjktokenmode{|\Meta{整数値}|}|\Means
@@ -410,7 +421,8 @@ U+30A2が属する“Katakana”（U+30A0～30FF）のブロックについて
   \item バージョン1： {\upTeX} v0.11～0.28と互換
   \item バージョン2： {\upTeX} v0.29～1.22と互換
   \item バージョン3： {\upTeX} v1.23と互換
-  \item バージョン4： {\upTeX} v1.25以降と互換
+  \item バージョン4： {\upTeX} v1.25～1.30と互換
+  \item バージョン5： {\upTeX} v1.35以降と互換
   \end{itemize}
 
 \item \Pkg{pxcjkcat}の読込時に、そのオプションにおいて
@@ -933,6 +945,41 @@ CCV~3では |latn1|“Latin-1 Supplement”のブロックが
 \item |latn1| の下位ブロック\Means
   |latnx|、|latny| の2つ。
 \end{itemize}
+
+\paragraph{モードCCVが5の場合}
+
+CCV~5では |hira|、|sym07|、|sym45|、|sym47| の
+4つのブロックが再分割されている。
+
+{
+  \newcommand\xE[2]{\noindent
+    \makebox[4em][l]{\texttt{#1}}\textsl{#2}\par}
+\begin{itemize}
+  \item |hira|“Hiragana”の再分割：
+    \begin{quotation}
+    \xE{hirax}{Hiragana/Other}
+    \xE{hiram}{Hiragana/Modifier}
+    \end{quotation}
+
+  \item |sym07|“Combining Diacritical Marks for Symbols”の再分割：
+  \begin{quotation}
+    \xE{sym07x}{Combining Diacritical Marks for Symbols/Other}
+    \xE{sym07m}{Combining Diacritical Marks for Symbols/Modifier}
+    \end{quotation}
+
+  \item |sym45|“Enclosed Alphanumeric Supplement”の再分割：
+  \begin{quotation}
+    \xE{sym45x}{Enclosed Alphanumeric Supplement/Other}
+    \xE{sym45m}{Enclosed Alphanumeric Supplement/Modifier}
+    \end{quotation}
+
+  \item |sym47|“Miscellaneous Symbols and Pictographs”の再分割：
+  \begin{quotation}
+    \xE{sym47x}{Miscellaneous Symbols and Pictographs/Other}
+    \xE{sym47m}{Miscellaneous Symbols and Pictographs/Modifier}
+    \end{quotation}
+\end{itemize}
+}
 
 
 %===========================================================
